@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APKInspect — Android security scanner</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img class="brand__logo" src="/icon.svg" alt="APKInspect logo">
+    <div class="brand__text">
+      <div class="brand__name">APK<span>Inspect</span></div>
+      <div class="brand__tag">Static security scanner for Android APK &amp; AAB</div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-view="scanner">Scanner</button>
+    <button class="tab" data-view="book">📖 Threat Book</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ===================== SCANNER ===================== -->
+  <section id="view-scanner" class="view is-active">
+    <div id="dropzone" class="dropzone" tabindex="0">
+      <div class="dropzone__glow"></div>
+      <svg class="dropzone__icon" viewBox="0 0 24 24" width="56" height="56" fill="none"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/>
+      </svg>
+      <div class="dropzone__title">Drop an APK or AAB to scan</div>
+      <div class="dropzone__hint">or <button type="button" class="link" id="browseBtn">browse your files</button> · everything stays on your machine</div>
+      <div class="dropzone__hint" style="margin-top:6px">no file handy? <button type="button" class="link" id="demoBtn">try a sample scan →</button></div>
+      <input id="fileInput" type="file" accept=".apk,.aab,.zip,.xapk" hidden>
+    </div>
+
+    <div id="scanning" class="scanning" hidden>
+      <div class="spinner"></div>
+      <div>Scanning <strong id="scanningName"></strong>…</div>
+    </div>
+
+    <div id="scanError" class="banner banner--error" hidden></div>
+
+    <div id="results" class="results" hidden>
+      <div class="results__bar">
+        <div class="results__file">
+          <span class="pill" id="rFileType"></span>
+          <strong id="rFileName"></strong>
+        </div>
+        <button class="btn btn--ghost" id="rescanBtn">↺ Scan another</button>
+      </div>
+
+      <div class="result-grid">
+        <div class="card gauge-card">
+          <div class="gauge">
+            <svg class="gauge__svg" viewBox="0 0 120 120">
+              <circle class="gauge__track" cx="60" cy="60" r="52"/>
+              <circle class="gauge__bar" id="gaugeBar" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="gauge__center">
+              <div class="gauge__score" id="gaugeScore">0</div>
+              <div class="gauge__outof">/ 100</div>
+            </div>
+          </div>
+          <div class="gauge-card__foot">
+            <span class="grade-badge" id="gradeBadge">–</span>
+            <span class="risk-label" id="riskLabel"></span>
+          </div>
+        </div>
+
+        <div class="card meta-card">
+          <h3 class="card__title">Application</h3>
+          <dl class="meta" id="metaList"></dl>
+        </div>
+      </div>
+
+      <div class="sev-chips" id="sevChips"></div>
+      <div class="findings" id="findings"></div>
+    </div>
+  </section>
+
+  <!-- ===================== THREAT BOOK ===================== -->
+  <section id="view-book" class="view">
+    <div class="book">
+      <aside class="book__nav">
+        <div class="book__brand"><img src="/icon.svg" alt=""><span>Field Guide</span></div>
+        <button class="book-tab is-active" data-page="overview">1 · How it works</button>
+        <button class="book-tab" data-page="threats">2 · Threat catalogue</button>
+        <div class="book__note">Click any threat on page&nbsp;2 to learn what it is and how to block it.</div>
+      </aside>
+
+      <div class="book__body">
+        <!-- PAGE 1 -->
+        <article id="page-overview" class="book-page is-active">
+          <h1>The book of APKInspect</h1>
+          <p class="lead">APKInspect opens an Android app package (<code>.apk</code> or <code>.aab</code>),
+          reads its manifest and every bundled file, and reports the security problems it finds —
+          then scores the app from <strong>100 (safe)</strong> down to <strong>0 (fully exposed)</strong>.</p>
+
+          <h2>What it inspects</h2>
+          <div class="feature-grid">
+            <div class="feature"><span class="feature__ic">🔑</span><div><b>Secrets &amp; API keys</b><p>Private keys, cloud credentials, Google/Stripe/Slack keys and high-entropy passwords hard-coded in the build.</p></div></div>
+            <div class="feature"><span class="feature__ic">🚪</span><div><b>Exported components</b><p>Activities, services, receivers and providers that any other app can reach — including cleartext <code>http://</code> deep links.</p></div></div>
+            <div class="feature"><span class="feature__ic">🌐</span><div><b>Exposed backends</b><p>Firebase databases and storage buckets whose URLs ship in the app and may have open rules.</p></div></div>
+            <div class="feature"><span class="feature__ic">⚙️</span><div><b>Build configuration</b><p>Debuggable builds, allowed backups, cleartext traffic and other risky manifest flags.</p></div></div>
+            <div class="feature"><span class="feature__ic">🛡️</span><div><b>Permissions</b><p>Privacy-sensitive and powerful permissions, each rated by how much they widen the attack surface.</p></div></div>
+            <div class="feature"><span class="feature__ic">📦</span><div><b>APK &amp; AAB</b><p>Reads compiled binary-XML manifests (APK) and protobuf manifests (AAB) with zero external tools.</p></div></div>
+          </div>
+
+          <h2>How the score works</h2>
+          <p>Every app starts at 100. Each issue chips away at the score by an amount based on its severity,
+          with diminishing returns for repeats so a long tail of minor issues can't unfairly zero a sound app.</p>
+          <div class="grade-legend" id="gradeLegend"></div>
+
+          <h2>How to use it</h2>
+          <ol class="steps">
+            <li>Go to the <b>Scanner</b> tab and drop in an <code>.apk</code> or <code>.aab</code>.</li>
+            <li>Read the score and the findings, grouped by severity.</li>
+            <li>Expand any finding and click <b>“How to block this →”</b> to jump here for the full explanation and fix.</li>
+          </ol>
+          <p class="muted">Note: this is static analysis — it flags the <i>presence</i> of risks, not proven exploitability.
+          Always confirm a finding before acting on it.</p>
+        </article>
+
+        <!-- PAGE 2 -->
+        <article id="page-threats" class="book-page">
+          <div class="threats-toolbar">
+            <input id="threatSearch" class="search" type="search" placeholder="Search threats…">
+            <div class="seg" id="sevFilter"></div>
+          </div>
+          <div class="threats-layout">
+            <div class="threats-list" id="threatsList"></div>
+            <div class="threat-detail" id="threatDetail">
+              <div class="threat-detail__empty">
+                <img src="/icon.svg" alt="" width="46"><p>Select a threat to read what it is and how to block it.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">APKInspect · runs locally · no data leaves your machine</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
