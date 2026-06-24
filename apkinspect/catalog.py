@@ -25,6 +25,7 @@ CATEGORY_META = {
     "network": {"label": "Network & Backends", "icon": "globe"},
     "config": {"label": "Build Configuration", "icon": "gear"},
     "permission": {"label": "Permissions", "icon": "shield"},
+    "signing": {"label": "App Signing", "icon": "badge"},
 }
 
 THREATS: list[dict] = [
@@ -174,6 +175,51 @@ THREATS: list[dict] = [
         "block": "Move secrets out of the binary: fetch them at runtime over an authenticated channel, "
                  "or use a server-side proxy. Do not just obfuscate — that only slows attackers down.",
     },
+    {
+        "key": "llm-keys", "ids": ["SECRET_OPENAI_KEY", "SECRET_ANTHROPIC_KEY"],
+        "title": "LLM provider API key", "severity": "HIGH", "category": "secret",
+        "what": "An OpenAI (sk-…) or Anthropic (sk-ant-…) API key is embedded in the app.",
+        "risk": "These keys are billed per token; a leaked key lets anyone run inference on your "
+                "account and exhaust your quota or budget.",
+        "detect": "We match the provider-specific 'sk-'/'sk-ant-' key prefixes.",
+        "block": "Revoke the key in the provider console and proxy all model calls through a backend "
+                 "that holds the key server-side.",
+    },
+    {
+        "key": "azure-storage", "ids": ["SECRET_AZURE_STORAGE_KEY"],
+        "title": "Azure Storage account key", "severity": "HIGH", "category": "secret",
+        "what": "An Azure Storage 'AccountKey=…' shared key is present in the app.",
+        "risk": "The account key grants full read/write to the storage account's blobs, tables and "
+                "queues.",
+        "detect": "We match the base64 'AccountKey=' value in a connection string.",
+        "block": "Rotate the key in Azure and use short-lived SAS tokens or managed identity instead.",
+    },
+    {
+        "key": "square", "ids": ["SECRET_SQUARE_TOKEN"],
+        "title": "Square access token", "severity": "HIGH", "category": "secret",
+        "what": "A Square access token (sq0atp-/sq0csp-/EAAA…) is embedded in the app.",
+        "risk": "Square tokens can read transactions and move money through your account.",
+        "detect": "We match the Square token prefixes.",
+        "block": "Revoke the token in the Square developer dashboard and keep it server-side.",
+    },
+    {
+        "key": "npm", "ids": ["SECRET_NPM_TOKEN"],
+        "title": "npm access token", "severity": "HIGH", "category": "secret",
+        "what": "An npm automation/publish token (npm_…) is bundled in the app.",
+        "risk": "Depending on scope it can publish or yank packages and read private registries.",
+        "detect": "We match the 'npm_' + 36-char token format.",
+        "block": "Revoke it with 'npm token revoke' and keep tokens out of shipped artifacts.",
+    },
+    {
+        "key": "db-uri", "ids": ["SECRET_DB_CONNECTION_STRING"],
+        "title": "Database connection string", "severity": "HIGH", "category": "secret",
+        "what": "A database URI with an embedded username and password (postgres/mysql/mongodb/redis) "
+                "is present in the app.",
+        "risk": "Anyone extracting it can connect directly to your database and read or destroy data.",
+        "detect": "We match 'scheme://user:pass@host' connection strings.",
+        "block": "Never let a client talk to the database directly — put a backend API in front and "
+                 "rotate the exposed credentials.",
+    },
     # -------------------------------------------------------------- components
     {
         "key": "exported", "ids": ["COMPONENT_EXPORTED"],
@@ -280,6 +326,65 @@ THREATS: list[dict] = [
                   "severity and rationale.",
         "block": "Request only what you genuinely need, prefer narrower alternatives (e.g. photo picker "
                  "instead of broad storage), and request at runtime with clear justification.",
+    },
+    # --------------------------------------------------------- network config
+    {
+        "key": "nsc-cleartext", "ids": ["NETWORK_NSC_CLEARTEXT"],
+        "title": "Network security config permits cleartext", "severity": "MEDIUM", "category": "network",
+        "what": "The app's network security config sets cleartextTrafficPermitted=\"true\" for a "
+                "base-config or domain-config.",
+        "risk": "Cleartext HTTP can be read and modified by anyone on the network path, even on Android "
+                "9+ where it is off by default.",
+        "detect": "We locate and parse the compiled network-security-config and read its cleartext flag.",
+        "block": "Set cleartextTrafficPermitted=\"false\" and use HTTPS; scope any unavoidable exception "
+                 "to a single domain.",
+    },
+    {
+        "key": "nsc-user-ca", "ids": ["NETWORK_NSC_USER_CA"],
+        "title": "Trusts user-installed CAs", "severity": "MEDIUM", "category": "network",
+        "what": "The network security config trust-anchors include <certificates src=\"user\"/>.",
+        "risk": "Trusting user-added CAs lets anyone who can install a certificate on the device "
+                "intercept the app's TLS traffic (man-in-the-middle).",
+        "detect": "We parse the config's trust-anchors and flag a 'user' certificate source outside "
+                  "debug-overrides.",
+        "block": "Trust only the system CA store (src=\"system\") in production; relax trust for local "
+                 "debugging inside a <debug-overrides> block instead.",
+    },
+    # ---------------------------------------------------------------- signing
+    {
+        "key": "signing-debug", "ids": ["SIGNING_DEBUG_CERT"],
+        "title": "Signed with the Android debug key", "severity": "HIGH", "category": "signing",
+        "what": "The APK is signed with the public Android debug certificate (CN=Android Debug).",
+        "risk": "The debug key is well known and shared, so anyone can re-sign a tampered build with the "
+                "same identity — defeating update integrity and any signature-level permission.",
+        "detect": "We read the signer certificate's subject from the v1 signature (or scan for the debug "
+                  "subject in the signing block).",
+        "block": "Sign release builds with a private release keystore; never ship a debug-signed APK.",
+    },
+    {
+        "key": "signing-weak-algo", "ids": ["SIGNING_WEAK_ALGORITHM"],
+        "title": "Weak certificate signature algorithm", "severity": "MEDIUM", "category": "signing",
+        "what": "The signing certificate uses an MD5- or SHA-1-based signature algorithm.",
+        "risk": "MD5/SHA-1 are collision-prone and deprecated, weakening the trust in the certificate.",
+        "detect": "We read the certificate's signatureAlgorithm OID from the v1 PKCS#7 block.",
+        "block": "Re-issue the signing certificate with SHA-256 or stronger.",
+    },
+    {
+        "key": "signing-short-key", "ids": ["SIGNING_SHORT_KEY"],
+        "title": "Short signing key", "severity": "MEDIUM", "category": "signing",
+        "what": "The signing key is an RSA key shorter than 2048 bits.",
+        "risk": "Short RSA keys are easier to factor, undermining the integrity guarantee of the signature.",
+        "detect": "We read the RSA modulus size from the signer certificate's public key.",
+        "block": "Use an RSA key of at least 2048 bits, or an elliptic-curve P-256 key.",
+    },
+    {
+        "key": "signing-v1-only", "ids": ["SIGNING_V1_ONLY"],
+        "title": "Legacy v1-only signing", "severity": "MEDIUM", "category": "signing",
+        "what": "The APK has only a v1 (JAR) signature; no APK Signature Scheme v2/v3 block is present.",
+        "risk": "v1-only signing is malleable (e.g. the Janus vulnerability, CVE-2017-13156) and gives "
+                "weaker tamper protection than whole-file v2+ signing.",
+        "detect": "We check for the 'APK Sig Block 42' signing block alongside the META-INF v1 signature.",
+        "block": "Enable APK Signature Scheme v2+ — it is the default in current Android build tooling.",
     },
 ]
 

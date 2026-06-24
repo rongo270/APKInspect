@@ -1,8 +1,10 @@
-"""Render a :class:`ScanResult` as a colourised terminal report or JSON."""
+"""Render a :class:`ScanResult` as a colourised terminal report, JSON or SARIF."""
 from __future__ import annotations
 
 import json
+from typing import Iterable, List
 
+from . import __version__, catalog
 from .model import SEVERITIES, ScanResult
 
 _COLORS = {
@@ -125,3 +127,79 @@ def render_text(result: ScanResult, color: bool = True, quiet: bool = False,
 
 def render_json(result: ScanResult) -> str:
     return json.dumps(result.to_dict(), indent=2)
+
+
+# ---------------------------------------------------------------------------
+# SARIF 2.1.0 (for GitHub code scanning / Azure DevOps and other SAST tooling)
+# ---------------------------------------------------------------------------
+_SARIF_LEVEL = {
+    "CRITICAL": "error", "HIGH": "error", "MEDIUM": "warning",
+    "LOW": "note", "INFO": "none",
+}
+# GitHub maps this CVSS-like number to its Critical/High/Medium/Low buckets.
+_SARIF_SECURITY_SEVERITY = {
+    "CRITICAL": "9.5", "HIGH": "8.0", "MEDIUM": "5.0", "LOW": "2.0", "INFO": "0.0",
+}
+
+
+def _sarif_uri(path: str) -> str:
+    return path.replace("\\", "/")
+
+
+def render_sarif(results: Iterable[ScanResult]) -> str:
+    """Render one or more scan results as a SARIF 2.1.0 log (single run)."""
+    rules: dict = {}
+    sarif_results: List[dict] = []
+
+    for result in results:
+        uri = _sarif_uri(result.path)
+        for f in result.sorted_findings():
+            entry = catalog.for_finding_id(f.id)
+            if f.id not in rules:
+                full = f.detail
+                if entry:
+                    full = f"{entry['what']} {entry['risk']}"
+                help_text = f.recommendation or (entry["block"] if entry else "")
+                rules[f.id] = {
+                    "id": f.id,
+                    "name": (entry["title"] if entry else f.title),
+                    "shortDescription": {"text": (entry["title"] if entry else f.title)},
+                    "fullDescription": {"text": full},
+                    "defaultConfiguration": {"level": _SARIF_LEVEL[f.severity]},
+                    "help": {"text": help_text},
+                    "properties": {
+                        "security-severity": _SARIF_SECURITY_SEVERITY[f.severity],
+                        "tags": ["security", "android", f.category],
+                    },
+                }
+            message = f.detail or f.title
+            if f.evidence:
+                message = f"{message} (evidence: {f.evidence})"
+            sarif_results.append({
+                "ruleId": f.id,
+                "level": _SARIF_LEVEL[f.severity],
+                "message": {"text": message},
+                "locations": [{
+                    "physicalLocation": {"artifactLocation": {"uri": uri}},
+                    "logicalLocations": [
+                        {"fullyQualifiedName": f.location or result.package or "application"}
+                    ],
+                }],
+                "properties": {"severity": f.severity, "category": f.category,
+                               "score": result.score},
+            })
+
+    log = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {"driver": {
+                "name": "APKInspect",
+                "version": __version__,
+                "informationUri": "https://github.com/rongo/APKInspect",
+                "rules": list(rules.values()),
+            }},
+            "results": sarif_results,
+        }],
+    }
+    return json.dumps(log, indent=2)

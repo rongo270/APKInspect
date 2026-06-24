@@ -61,6 +61,20 @@ class TestSecretScanning(unittest.TestCase):
         found = [f for f in secrets.scan_text(text, "x") if f.id == "SECRET_AWS_ACCESS_KEY_ID"]
         self.assertEqual(len(found), 1)
 
+    def test_new_service_keys(self):
+        text = "\n".join([fx.OPENAI_KEY, fx.ANTHROPIC_KEY, fx.NPM_TOKEN,
+                          fx.SQUARE_TOKEN, fx.AZURE_STORAGE, fx.DB_URI])
+        found = ids(secrets.scan_text(text, "x"))
+        for sid in ("SECRET_OPENAI_KEY", "SECRET_ANTHROPIC_KEY", "SECRET_NPM_TOKEN",
+                    "SECRET_SQUARE_TOKEN", "SECRET_AZURE_STORAGE_KEY",
+                    "SECRET_DB_CONNECTION_STRING"):
+            self.assertIn(sid, found, sid)
+
+    def test_anthropic_not_misread_as_openai(self):
+        found = secrets.scan_text(fx.ANTHROPIC_KEY, "x")
+        self.assertIn("SECRET_ANTHROPIC_KEY", {f.id for f in found})
+        self.assertNotIn("SECRET_OPENAI_KEY", {f.id for f in found})
+
 
 if __name__ == "__main__":
     unittest.main()

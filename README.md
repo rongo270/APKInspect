@@ -71,11 +71,14 @@ apkinspect path/to/app.apk path/to/bundle.aab
 | Option | Purpose |
 |---|---|
 | `--json` | Machine-readable output (one object, or a list for multiple files). |
+| `--sarif` | **SARIF 2.1.0** output for GitHub code scanning / Azure DevOps / other SAST tooling. |
 | `--quiet` | Header + score + counts only (omit per-finding detail). |
 | `--no-color` | Disable ANSI colour. |
 | `--no-secrets` | Skip the secret/API-key sweep (manifest checks only, faster). |
 | `--min-score N` | **CI gate:** exit non-zero if any file scores below `N`. |
 | `--fail-on SEV` | **CI gate:** exit non-zero on any finding at/above `CRITICAL\|HIGH\|MEDIUM\|LOW`. |
+| `--baseline FILE` | Suppress findings recorded in `FILE` (accepted risk) — gates only fire on **new** issues. |
+| `--write-baseline FILE` | Scan, then write the current findings to `FILE` as a baseline and exit. |
 | `-o FILE` | Write the report to a file (UTF-8). |
 
 Exit codes: `0` ok · `1` a CI gate failed · `2` a file could not be scanned.
@@ -83,6 +86,13 @@ Exit codes: `0` ok · `1` a CI gate failed · `2` a file could not be scanned.
 ```bash
 # Fail a pipeline if any shipped build scores under 70 or has a HIGH+ issue
 apkinspect build/*.apk --min-score 70 --fail-on HIGH
+
+# Upload findings to GitHub code scanning
+apkinspect app.apk --sarif -o apkinspect.sarif   # then actions/upload-sarif
+
+# Accept today's findings, then gate only on regressions
+apkinspect app.apk --write-baseline apkinspect-baseline.json
+apkinspect app.apk --baseline apkinspect-baseline.json --fail-on HIGH
 ```
 
 ## What it checks (the full map)
@@ -109,6 +119,11 @@ shown in full so you can act on them.
 | `SECRET_FIREBASE_STORAGE` | MEDIUM | Firebase Storage / GCS bucket |
 | `SECRET_SLACK_TOKEN` / `SECRET_SLACK_WEBHOOK` | HIGH | Slack token / incoming webhook |
 | `SECRET_TWILIO_KEY` / `SECRET_MAILGUN` | HIGH | Twilio / Mailgun keys |
+| `SECRET_OPENAI_KEY` / `SECRET_ANTHROPIC_KEY` | HIGH | LLM provider API keys (`sk-…` / `sk-ant-…`) |
+| `SECRET_AZURE_STORAGE_KEY` | HIGH | Azure Storage account key (`AccountKey=…`) |
+| `SECRET_SQUARE_TOKEN` | HIGH | Square access token |
+| `SECRET_NPM_TOKEN` | HIGH | npm access token (`npm_…`) |
+| `SECRET_DB_CONNECTION_STRING` | HIGH | DB URI with embedded credentials (`postgres/mysql/mongodb/redis://user:pass@…`) |
 | `SECRET_GOOGLE_OAUTH` | LOW | Google OAuth client id |
 | `SECRET_JWT` | LOW | JSON Web Tokens |
 | `SECRET_HARDCODED_CREDENTIAL` | MEDIUM | `api_key=/password=/secret=` with a high-entropy value (placeholders and low-entropy strings are filtered out) |
@@ -135,6 +150,28 @@ shown in full so you can act on them.
 | `MANIFEST_TESTONLY` | LOW | `android:testOnly="true"` |
 | `MANIFEST_OLD_MINSDK` | LOW | `minSdkVersion < 24` |
 
+### Network Security Config (`apkinspect/nsc.py`)
+Locates and parses the compiled `network-security-config` to see what it actually
+permits (the manifest alone only shows that one is referenced).
+
+| id | severity | detects |
+|---|---|---|
+| `NETWORK_NSC_CLEARTEXT` | MEDIUM | `cleartextTrafficPermitted="true"` in a base/domain config |
+| `NETWORK_NSC_USER_CA` | MEDIUM | `<trust-anchors>` trust **user-installed CAs** (`<certificates src="user"/>`) → MITM with a user cert |
+
+### App signing (`apkinspect/signing.py`)
+Inspects the v1 (JAR) signer certificate and detects the v2/v3 APK Signing Block
+(a stdlib DER reader pulls the subject, signature algorithm and RSA key size out of
+the PKCS#7). APK only — AABs are re-signed by Google Play. A completely unsigned
+build artifact yields no findings.
+
+| id | severity | detects |
+|---|---|---|
+| `SIGNING_DEBUG_CERT` | HIGH | signed with the public **Android debug** key (`CN=Android Debug`) |
+| `SIGNING_WEAK_ALGORITHM` | MEDIUM | certificate uses an **MD5/SHA-1** signature algorithm |
+| `SIGNING_SHORT_KEY` | MEDIUM | RSA signing key **< 2048 bits** |
+| `SIGNING_V1_ONLY` | MEDIUM | only the legacy **v1** scheme is present (no v2/v3 block; Janus/CVE-2017-13156) |
+
 ### Dangerous permissions (`apkinspect/permissions.py`)
 
 | id | severity | detects |
@@ -160,10 +197,12 @@ clamped to `[0, 100]` and mapped to a grade:
 
 ## Testing
 
-79 unit/integration tests build **synthetic APK/AAB archives with planted issues**
-(a from-scratch AXML encoder round-trips against the parser) and assert that every
-check fires, that a clean app scores 100, and that a vulnerable app scores in the
-failing range.
+97 unit/integration tests build **synthetic APK/AAB archives with planted issues**
+(a from-scratch AXML encoder round-trips against the parser, and a hand-rolled DER
+encoder produces certificates for the signing checks) and assert that every check
+fires, that a clean app scores 100, and that a vulnerable app scores in the failing
+range. CI (`.github/workflows/ci.yml`) runs the suite on Python 3.8–3.12 and
+dogfoods the CLI against the generated samples.
 
 ```bash
 python -m unittest discover -s tests -v
@@ -185,10 +224,13 @@ apkinspect/
   manifest.py    Exported-component / config / permission analysis
   permissions.py Dangerous-permission catalogue
   secrets.py     Secret / API-key / Firebase-URL scanner + redaction
+  nsc.py         Network-security-config parser (cleartext / user-CA trust)
+  signing.py     v1 certificate + v2/v3 signing-block analysis (stdlib DER reader)
+  baseline.py    Finding fingerprints for CI suppression
   scoring.py     0-100 scoring engine
   scanner.py     Orchestration (open archive -> findings -> score)
   catalog.py     Threat encyclopedia (powers the Threat Book + fix advice)
-  report.py      Text + JSON rendering
+  report.py      Text + JSON + SARIF rendering
   __main__.py    CLI
   web/           Local web GUI (stdlib http.server + static SPA)
     server.py    API (/api/scan, /api/catalog, /api/demo) + static serving
@@ -209,5 +251,12 @@ APKInspect.cmd   Windows double-click launcher for the GUI
 * **AXML parser** follows the documented AOSP on-disk format and is validated by
   encode/decode round-trips. For high-assurance review of arbitrary real-world APKs
   you can additionally cross-check with a heavyweight tool such as `androguard`.
-* No DEX bytecode/dataflow analysis, certificate/signature-scheme verification, or
-  native-code disassembly (the secret sweep does scan `.so` bytes).
+* **Signing analysis reads, it does not verify.** It inspects the v1 certificate's
+  fields (subject, algorithm, key size) and detects the presence of a v2/v3 block,
+  but does not cryptographically verify the signature or the block's contents.
+* No DEX bytecode/dataflow analysis or native-code disassembly (the secret sweep does
+  scan `.so` bytes).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

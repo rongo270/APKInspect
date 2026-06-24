@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -v
+
+      # --- dogfooding: APKInspect scans its own sample artifacts ---
+      - name: Build sample artifacts
+        run: python tools/make_samples.py
+
+      - name: Self-scan — clean build must score >= 90
+        run: python -m apkinspect samples/clean.apk --min-score 90 --no-color
+
+      - name: Self-scan — vulnerable sample (informational)
+        run: python -m apkinspect samples/vulnerable.apk --no-color || true
+
+      - name: Generate SARIF
+        if: matrix.python-version == '3.11'
+        run: python -m apkinspect samples/vulnerable.apk --sarif -o apkinspect.sarif
+
+      - name: Upload SARIF artifact
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkinspect-sarif
+          path: apkinspect.sarif

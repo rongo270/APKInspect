@@ -127,6 +127,37 @@ PATTERNS: list[SecretPattern] = [
         recommendation="Rotate the Mailgun key.",
     ),
     SecretPattern(
+        "ANTHROPIC_KEY", "Anthropic API key", "HIGH",
+        re.compile(r"\b(sk-ant-[A-Za-z0-9_\-]{20,})\b"), group=1,
+        recommendation="Revoke the key in the Anthropic console and call the API from a backend, not the client.",
+    ),
+    SecretPattern(
+        "OPENAI_KEY", "OpenAI API key", "HIGH",
+        re.compile(r"\b(sk-(?:proj-)?[A-Za-z0-9]{32,})\b"), group=1,
+        recommendation="Revoke the key in the OpenAI dashboard; never ship LLM provider keys in a client.",
+    ),
+    SecretPattern(
+        "AZURE_STORAGE_KEY", "Azure Storage account key", "HIGH",
+        re.compile(r"AccountKey=([A-Za-z0-9+/]{86}==)"), group=1,
+        recommendation="Rotate the storage account key in Azure and prefer SAS tokens or managed identity.",
+    ),
+    SecretPattern(
+        "SQUARE_TOKEN", "Square access token", "HIGH",
+        re.compile(r"\b((?:sq0atp|sq0csp|EAAA)[A-Za-z0-9_\-]{22,})\b"), group=1,
+        recommendation="Revoke the token in the Square developer dashboard.",
+    ),
+    SecretPattern(
+        "NPM_TOKEN", "npm access token", "HIGH",
+        re.compile(r"\b(npm_[A-Za-z0-9]{36})\b"), group=1,
+        recommendation="Revoke the token ('npm token revoke') and keep it out of client artifacts.",
+    ),
+    SecretPattern(
+        "DB_CONNECTION_STRING", "Database connection string with credentials", "HIGH",
+        re.compile(r"\b((?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqp)://[^\s:@/]+:[^\s:@/]+@[^\s/\"']+)"),
+        group=1,
+        recommendation="Move the database behind a backend API; never embed DB credentials in a client.",
+    ),
+    SecretPattern(
         "GOOGLE_OAUTH", "Google OAuth client id", "LOW",
         re.compile(r"\b([0-9]+-[0-9A-Za-z_]{20,}\.apps\.googleusercontent\.com)\b"), group=1,
         redact_value=False,

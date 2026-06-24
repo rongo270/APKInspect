@@ -228,6 +228,13 @@ FIREBASE_DB = "https://apkinspect-demo.firebaseio.com"
 SLACK_TOKEN = "xoxb-1234567890-ABCDEFGHIJKLMNOPQRSTUVWX"
 GENERIC_SECRET = "p4ssw0rd_Hx9KqZ2mLn"
 MAPS_API_KEY = "AIza" + "SyMapsK3yAbcdEfGhIjKlMnOpQrStUvWxY1"     # AIza + 35
+OPENAI_KEY = "sk-" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8S9t0U1v2"   # sk- + 44 alnum
+ANTHROPIC_KEY = "sk-ant-api03-" + "Ab12Cd34Ef56Gh78Ij90Kl12Mn34Op56"
+NPM_TOKEN = "npm_" + "abcdef0123456789ABCDEF0123456789abcd"          # npm_ + 36
+SQUARE_TOKEN = "sq0atp-" + "Ab12Cd34Ef56Gh78Ij90Kl"                  # sq0atp- + 22
+AZURE_STORAGE = ("DefaultEndpointsProtocol=https;AccountName=demo;AccountKey="
+                 + "A" * 86 + "==;EndpointSuffix=core.windows.net")
+DB_URI = "postgres://dbuser:S3cr3tPass123@db.internal.example.com:5432/app"
 PRIVATE_KEY = (
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu\n"
@@ -242,7 +249,8 @@ assert len(MAPS_API_KEY) == 39, len(MAPS_API_KEY)
 def planted_dex() -> bytes:
     """A fake classes.dex carrying planted secrets as null-separated strings."""
     blob = b"dex\n035\x00" + b"\x00" * 24
-    for s in (GOOGLE_API_KEY, AWS_KEY, FIREBASE_DB, SLACK_TOKEN, PRIVATE_KEY):
+    for s in (GOOGLE_API_KEY, AWS_KEY, FIREBASE_DB, SLACK_TOKEN, PRIVATE_KEY,
+              OPENAI_KEY, ANTHROPIC_KEY, NPM_TOKEN, SQUARE_TOKEN, AZURE_STORAGE, DB_URI):
         blob += s.encode("utf-8") + b"\x00"
     blob += b'\x00api_key="' + GENERIC_SECRET.encode() + b'"\x00'
     return blob
@@ -375,3 +383,154 @@ def vulnerable_assets() -> dict[str, bytes]:
             b'  "api_key": "' + GENERIC_SECRET.encode() + b'"\n}'
         ),
     }
+
+
+# ===========================================================================
+# Minimal DER encoder + synthetic X.509 / PKCS#7 (for signing tests)
+# ===========================================================================
+SHA1_RSA_OID = "1.2.840.113549.1.1.5"
+SHA256_RSA_OID = "1.2.840.113549.1.1.11"
+_RSA_OID = "1.2.840.113549.1.1.1"
+_CN_OID = "2.5.4.3"
+_O_OID = "2.5.4.10"
+_PKCS7_SIGNED_DATA_OID = "1.2.840.113549.1.7.2"
+_PKCS7_DATA_OID = "1.2.840.113549.1.7.1"
+
+
+def _d_len(n: int) -> bytes:
+    if n < 0x80:
+        return bytes([n])
+    out = b""
+    while n:
+        out = bytes([n & 0xFF]) + out
+        n >>= 8
+    return bytes([0x80 | len(out)]) + out
+
+
+def _d_tlv(tag: int, value: bytes) -> bytes:
+    return bytes([tag]) + _d_len(len(value)) + value
+
+
+def _d_seq(*items: bytes) -> bytes:
+    return _d_tlv(0x30, b"".join(items))
+
+
+def _d_set(*items: bytes) -> bytes:
+    return _d_tlv(0x31, b"".join(items))
+
+
+def _d_ctx(num: int, value: bytes) -> bytes:
+    return _d_tlv(0xA0 | num, value)
+
+
+def _d_int(n: int) -> bytes:
+    if n == 0:
+        return _d_tlv(0x02, b"\x00")
+    raw = b""
+    while n:
+        raw = bytes([n & 0xFF]) + raw
+        n >>= 8
+    if raw[0] & 0x80:
+        raw = b"\x00" + raw
+    return _d_tlv(0x02, raw)
+
+
+def _d_oid(dotted: str) -> bytes:
+    parts = [int(x) for x in dotted.split(".")]
+    body = bytes([parts[0] * 40 + parts[1]])
+    for p in parts[2:]:
+        stack = [p & 0x7F]
+        p >>= 7
+        while p:
+            stack.append((p & 0x7F) | 0x80)
+            p >>= 7
+        body += bytes(reversed(stack))
+    return _d_tlv(0x06, body)
+
+
+def _d_printable(s: str) -> bytes:
+    return _d_tlv(0x13, s.encode("ascii"))
+
+
+def _d_bitstring(content: bytes) -> bytes:
+    return _d_tlv(0x03, b"\x00" + content)
+
+
+def _d_null() -> bytes:
+    return _d_tlv(0x05, b"")
+
+
+def _d_utctime(s: str = "230101000000Z") -> bytes:
+    return _d_tlv(0x17, s.encode("ascii"))
+
+
+def _rdn(oid: str, value: str) -> bytes:
+    return _d_set(_d_seq(_d_oid(oid), _d_printable(value)))
+
+
+def build_certificate(cn: str = "Android Debug", sig_oid: str = SHA1_RSA_OID,
+                      key_bits: int = 2048, org: str = "Android") -> bytes:
+    """Build a syntactically valid (self-signed-looking) X.509 cert DER.
+
+    The signature itself is bogus — we only ever read fields, never verify it."""
+    algid = _d_seq(_d_oid(sig_oid), _d_null())
+    name = _d_seq(_rdn(_CN_OID, cn), _rdn(_O_OID, org))
+    validity = _d_seq(_d_utctime(), _d_utctime("330101000000Z"))
+    modulus = (1 << (key_bits - 1)) | 1            # exactly key_bits bits
+    rsa_pub = _d_seq(_d_int(modulus), _d_int(65537))
+    spki = _d_seq(_d_seq(_d_oid(_RSA_OID), _d_null()), _d_bitstring(rsa_pub))
+    tbs = _d_seq(
+        _d_ctx(0, _d_int(2)),                       # version v3
+        _d_int(1),                                  # serial
+        algid,                                      # inner signature
+        name,                                       # issuer
+        validity,
+        name,                                       # subject (self-signed)
+        spki,
+    )
+    return _d_seq(tbs, algid, _d_bitstring(b"\x00" * 32))
+
+
+def build_pkcs7(cert_der: bytes) -> bytes:
+    """Wrap a certificate in a minimal PKCS#7 SignedData ContentInfo."""
+    signed_data = _d_seq(
+        _d_int(1),                                  # version
+        _d_set(),                                   # digestAlgorithms
+        _d_seq(_d_oid(_PKCS7_DATA_OID)),            # encapContentInfo
+        _d_ctx(0, cert_der),                        # certificates [0]
+        _d_set(),                                   # signerInfos
+    )
+    return _d_seq(_d_oid(_PKCS7_SIGNED_DATA_OID), _d_ctx(0, signed_data))
+
+
+def signed_meta_inf(debug: bool = True, weak: bool = True, key_bits: int = 2048) -> dict[str, bytes]:
+    """v1 (JAR) signature entries for a synthetic APK."""
+    cn = "Android Debug" if debug else "Acme Release"
+    sig_oid = SHA1_RSA_OID if weak else SHA256_RSA_OID
+    cert = build_certificate(cn=cn, sig_oid=sig_oid, key_bits=key_bits)
+    return {
+        "META-INF/MANIFEST.MF": b"Manifest-Version: 1.0\r\n\r\n",
+        "META-INF/CERT.SF": b"Signature-Version: 1.0\r\n\r\n",
+        "META-INF/CERT.RSA": build_pkcs7(cert),
+    }
+
+
+# ===========================================================================
+# Network security config (compiled binary XML)
+# ===========================================================================
+def insecure_nsc() -> El:
+    return E("network-security-config", [], [
+        E("base-config", [A("cleartextTrafficPermitted", True, ns=None)], [
+            E("trust-anchors", [], [
+                E("certificates", [A("src", "system", ns=None)]),
+                E("certificates", [A("src", "user", ns=None)]),
+            ]),
+        ]),
+    ])
+
+
+def nsc_axml() -> bytes:
+    return encode_axml(insecure_nsc())
+
+
+NSC_ENTRY = "res/xml/network_security_config.xml"

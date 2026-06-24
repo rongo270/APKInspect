@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import zipfile
-from typing import Optional
+from typing import Optional, Set
 
-from . import aab, axml, secrets
+from . import aab, axml, baseline, nsc, secrets, signing
 from .manifest import analyze
 from .model import Finding, ScanResult
 from .scoring import compute_score
@@ -90,7 +90,8 @@ def _sweep_secrets(zf: zipfile.ZipFile, errors: list[str]) -> list[Finding]:
     return findings
 
 
-def scan_file(path: str, scan_secrets: bool = True) -> ScanResult:
+def scan_file(path: str, scan_secrets: bool = True,
+              suppress: Optional[Set[str]] = None) -> ScanResult:
     result = ScanResult(path=path)
     if not os.path.exists(path):
         result.errors.append("file not found")
@@ -134,9 +135,35 @@ def scan_file(path: str, scan_secrets: bool = True) -> ScanResult:
                 seen.add((f.id, f.evidence))
                 result.add(f)
 
+        # Network security config (cleartext / user-CA trust).
+        try:
+            for f in nsc.analyze(zf):
+                result.add(f)
+        except Exception as exc:
+            result.errors.append(f"network-config analysis failed: {exc}")
+
+        # App signing (debug cert, weak algo/key, v1-only) — APK only.
+        try:
+            for f in signing.analyze(path, zf, result.file_type, result.file_size):
+                result.add(f)
+        except Exception as exc:
+            result.errors.append(f"signing analysis failed: {exc}")
+
         result.meta["entry_count"] = len(names)
         result.meta["dex_count"] = sum(1 for n in names if n.endswith(".dex"))
         result.meta["has_native_libs"] = any(n.endswith(".so") for n in names)
+
+    if suppress:
+        kept: list[Finding] = []
+        suppressed = 0
+        for f in result.findings:
+            if baseline.fingerprint(f) in suppress:
+                suppressed += 1
+            else:
+                kept.append(f)
+        result.findings = kept
+        if suppressed:
+            result.meta["suppressed_count"] = suppressed
 
     result.score, result.grade, result.risk_label = compute_score(result.findings)
     return result

@@ -14,7 +14,13 @@ from tests import fixtures as fx  # noqa: E402
 def main(out_dir: str = "samples") -> None:
     os.makedirs(out_dir, exist_ok=True)
 
-    vuln = fx.build_apk_bytes(fx.vulnerable_manifest(), fx.planted_dex(), fx.vulnerable_assets())
+    # The vulnerable sample also carries a debug-key v1 signature and an insecure
+    # network security config, so it exercises the signing and NSC checks too.
+    vuln_extra = dict(fx.vulnerable_assets())
+    vuln_extra[fx.NSC_ENTRY] = fx.nsc_axml()
+    vuln_extra.update(fx.signed_meta_inf(debug=True, weak=True, key_bits=1024))
+
+    vuln = fx.build_apk_bytes(fx.vulnerable_manifest(), fx.planted_dex(), vuln_extra)
     clean = fx.build_apk_bytes(fx.clean_manifest(), fx.clean_dex())
     aab = fx.build_aab_bytes(fx.planted_dex(), fx.vulnerable_assets())
 
