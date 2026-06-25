@@ -27,7 +27,7 @@ with a clear, fix-it-now explanation for every finding.
 
 | | |
 |---|---|
-| 🧰 **Zero dependencies** | Pure Python 3.8+ standard library — it ships its own Android Binary XML and AAB protobuf parsers. No Android SDK, `aapt`, or `androguard`. |
+| 🧰 **Zero dependencies** | Pure Python 3.8+ standard library - it ships its own Android Binary XML and AAB protobuf parsers. No Android SDK, `aapt`, or `androguard`. |
 | 🔒 **Private by design** | The app runs entirely on `127.0.0.1`. No file ever leaves your machine. |
 | 🛡️ **Defensive** | Catches leaked secrets, exported components, weak signing, and risky config **before** you ship. |
 | ⚙️ **CI-ready** | JSON / **SARIF** output and exit-code gates for GitHub code scanning and pipelines. |
@@ -44,18 +44,18 @@ $ apkinspect app.apk
   Findings      Critical: 1  High: 3  Medium: 5  Low: 6
 ```
 
-## 🚀 Run it — no command line needed
+## 🚀 Run it - no command line needed
 
 APKInspect ships a polished **local web app**: drag in an APK/AAB to get an animated safety
 score, colour-coded findings, and a built-in **Threat Book** that explains every issue and
 exactly how to block it.
 
-- 🪟 **Windows** — double-click **`APKInspect.cmd`**. If Python is missing it installs it for
-  you, then opens the app in your browser. *(The icon is created **in this folder** — never on
+- 🪟 **Windows** - double-click **`APKInspect.cmd`**. If Python is missing it installs it for
+  you, then opens the app in your browser. *(The icon is created **in this folder** - never on
   your Desktop.)*
-- 🍎 **macOS** — double-click **`APKInspect.command`** *(first time: right-click → **Open**)*.
+- 🍎 **macOS** - double-click **`APKInspect.command`** *(first time: right-click → **Open**)*.
   It builds an **`APKInspect.app`** with the real icon.
-- 🐧 **Linux** — run **`./APKInspect.command`** from a terminal.
+- 🐧 **Linux** - run **`./APKInspect.command`** from a terminal.
 
 > No sample handy? Click **“try a sample scan”** on the drop zone.
 
@@ -68,7 +68,7 @@ exactly how to block it.
 
 ## 📦 Install
 
-> **The only requirement is [Python 3.8+](https://www.python.org/downloads/)** — there are *no*
+> **The only requirement is [Python 3.8+](https://www.python.org/downloads/)** - there are *no*
 > third-party packages. On Windows, tick *“Add Python to PATH”* in the installer.
 
 Two ways to set it up:
@@ -116,7 +116,7 @@ Every check has a stable `id` and is exercised by an automated test.
 
 - 🔑 **Hard-coded secrets &amp; exposed backends** &nbsp;`secrets.py`
   AWS / GCP / Stripe / GitHub / Slack / Twilio / OpenAI keys, **Firebase Realtime DB URLs**,
-  DB connection strings, and more — swept across DEX, `resources.arsc`, `assets/`, native libs,
+  DB connection strings, and more - swept across DEX, `resources.arsc`, `assets/`, native libs,
   and manifest meta-data. Secret values are **redacted** in the report.
 - 📤 **Exported components &amp; deep links** &nbsp;`manifest.py`
   Activities / services / receivers / **providers** reachable by any app, and BROWSABLE
@@ -162,17 +162,17 @@ python -m apkinspect samples/vulnerable.apk
 
 ## ⚠️ Limitations
 
-- **Static analysis** flags the *presence/exposure* of issues, not proven exploitability — a
+- **Static analysis** flags the *presence/exposure* of issues, not proven exploitability - a
   flagged Firebase URL or exported component may be intentional and safe; verify it.
 - **AAB manifests are best-effort** (protobuf-decoded generically).
-- **Signing analysis reads, it does not verify** — it inspects the v1 certificate's fields and
+- **Signing analysis reads, it does not verify** - it inspects the v1 certificate's fields and
   detects a v2/v3 block, but does not cryptographically verify signatures.
 
 ---
 
 <div align="center">
 
-**MIT licensed** — see [LICENSE](LICENSE).
+**MIT licensed** - see [LICENSE](LICENSE).
 
 <sub>Runs on Windows · macOS · Linux &nbsp;•&nbsp; Zero dependencies &nbsp;•&nbsp; Nothing leaves your machine</sub>
 
