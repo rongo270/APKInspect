@@ -4,6 +4,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Runtime dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](pyproject.toml)
+[![Platforms](https://img.shields.io/badge/runs%20on-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#graphical-interface)
 
 A **self-contained static security scanner for Android APK / AAB files**. Point it
 at an `.apk` or `.aab` and it inspects the manifest and every packaged file, then
@@ -43,11 +44,17 @@ python -m apkinspect.web      # starts a local server and opens your browser
 apkinspect-gui
 ```
 
-**On Windows, no command line needed:** double-click **`Install APKInspect.cmd`** once.
-It checks that Python is present (and installs it for you if it isn't — nothing else is
-required), then drops an **APKInspect icon on your Desktop**. Double-click that icon any
-time to launch. Everything runs on `127.0.0.1` — no file ever leaves your machine. (No
-sample handy? Click **“try a sample scan”** on the drop zone.)
+**No command line needed:**
+
+* **Windows** — double-click **`APKInspect.cmd`**. The first time, it makes sure Python is
+  installed (installing it for you if it isn't — nothing else is needed), creates an
+  **APKInspect icon on your Desktop**, and launches. After that, just use the Desktop icon.
+* **macOS** — double-click **`APKInspect.command`** (the very first time, right-click it →
+  **Open** to get past Gatekeeper).
+* **Linux** — run **`./APKInspect.command`** from a terminal.
+
+Everything runs on `127.0.0.1` — no file ever leaves your machine. (No sample handy? Click
+**“try a sample scan”** on the drop zone.)
 
 | Scanner | Threat Book |
 |---|---|
@@ -56,8 +63,8 @@ sample handy? Click **“try a sample scan”** on the drop zone.)
 ![Results view](assets/screenshots/results.png)
 
 The app icon lives in `assets/` (`icon.png` / `icon.ico`) and is regenerated from pure
-Python by `tools/make_icon.py`. The Windows setup script applies it to the shortcut it
-creates, so the launcher carries the real icon.
+Python by `tools/make_icon.py`. On first launch the Windows launcher creates a Desktop
+shortcut that carries this icon.
 
 ## Install / run
 
@@ -252,8 +259,8 @@ apkinspect/
 assets/          App icon (png/ico) + screenshots
 tests/           Test suite + synthetic-fixture builders
 tools/           Sample generator + pure-Python icon generator
-APKInspect.cmd        Windows launcher for the GUI (finds Python, starts the app)
-Install APKInspect.cmd One-time Windows setup: ensures Python + makes a desktop icon
+APKInspect.cmd     Windows launcher (finds/installs Python, makes a desktop icon, runs the GUI)
+APKInspect.command macOS / Linux launcher (finds Python, runs the GUI)
 ```
 
 ## Limitations & honest caveats
