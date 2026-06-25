@@ -1,19 +1,36 @@
+<div align="center">
+
+<img src="assets/icon.png" width="120" alt="APKInspect logo" />
+
 # APKInspect
 
+**A self-contained static security scanner for Android APK &amp; AAB files.**
+
+Drag in an app → get a safety score from **100 (safe)** to **0 (exposed)**,
+with a clear, fix-it-now explanation for every finding.
+
 [![CI](https://github.com/rongo270/APKInspect/actions/workflows/ci.yml/badge.svg)](https://github.com/rongo270/APKInspect/actions/workflows/ci.yml)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Runtime dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](pyproject.toml)
+[![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](pyproject.toml)
+[![Platforms](https://img.shields.io/badge/runs%20on-Windows%20·%20macOS%20·%20Linux-lightgrey.svg)](#-run-it--no-command-line-needed)
 
-A **self-contained static security scanner for Android APK / AAB files**. Point it at an
-`.apk` or `.aab` and it inspects the manifest and every packaged file, then rates the app
-from **100 (safe)** to **0 (fully exposed)**.
+</div>
 
-* **Zero dependencies** — pure Python standard library (3.8+). It ships its own Android
-  Binary XML and AAB protobuf parsers, so there's no Android SDK, `aapt`, or `androguard`
-  to install.
-* **Defensive** — built for app authors, reviewers, and CI to catch leaks *before*
-  shipping. It reports exposure; it does not attack anything.
+<div align="center">
+  <img src="assets/screenshots/results.png" alt="APKInspect results view" width="90%" />
+</div>
+
+---
+
+## ✨ Why APKInspect
+
+| | |
+|---|---|
+| 🧰 **Zero dependencies** | Pure Python 3.8+ standard library — it ships its own Android Binary XML and AAB protobuf parsers. No Android SDK, `aapt`, or `androguard`. |
+| 🔒 **Private by design** | The app runs entirely on `127.0.0.1`. No file ever leaves your machine. |
+| 🛡️ **Defensive** | Catches leaked secrets, exported components, weak signing, and risky config **before** you ship. |
+| ⚙️ **CI-ready** | JSON / **SARIF** output and exit-code gates for GitHub code scanning and pipelines. |
 
 ```
 $ apkinspect app.apk
@@ -25,43 +42,41 @@ $ apkinspect app.apk
   Package    : com.example.app  v1.4.2 (1042)
   SAFETY SCORE   42/100  [##########..............]  grade D  (high risk)
   Findings      Critical: 1  High: 3  Medium: 5  Low: 6
-  ...
 ```
 
-## Run it — no command line needed
+## 🚀 Run it — no command line needed
 
 APKInspect ships a polished **local web app**: drag in an APK/AAB to get an animated safety
 score, colour-coded findings, and a built-in **Threat Book** that explains every issue and
-exactly how to block it. Everything runs on `127.0.0.1` — **no file ever leaves your machine.**
+exactly how to block it.
 
-* **Windows** — double-click **`APKInspect.cmd`**. If Python is missing it installs it for
-  you, then opens the app in your browser. (It creates an icon **in this folder** — never on
-  your Desktop.)
-* **macOS** — double-click **`APKInspect.command`** (first time only: right-click → **Open**
-  to clear Gatekeeper). It builds an **`APKInspect.app`** with the real icon.
-* **Linux** — run **`./APKInspect.command`** from a terminal.
+- 🪟 **Windows** — double-click **`APKInspect.cmd`**. If Python is missing it installs it for
+  you, then opens the app in your browser. *(The icon is created **in this folder** — never on
+  your Desktop.)*
+- 🍎 **macOS** — double-click **`APKInspect.command`** *(first time: right-click → **Open**)*.
+  It builds an **`APKInspect.app`** with the real icon.
+- 🐧 **Linux** — run **`./APKInspect.command`** from a terminal.
 
-No sample handy? Click **“try a sample scan”** on the drop zone.
+> No sample handy? Click **“try a sample scan”** on the drop zone.
 
-| Scanner | Threat Book |
-|---|---|
-| ![Scanner view](assets/screenshots/scanner.png) | ![Threat Book](assets/screenshots/threat-book.png) |
+<table>
+  <tr>
+    <td align="center"><b>Scanner</b><br><img src="assets/screenshots/scanner.png" alt="Scanner view" /></td>
+    <td align="center"><b>Threat Book</b><br><img src="assets/screenshots/threat-book.png" alt="Threat Book" /></td>
+  </tr>
+</table>
 
-![Results view](assets/screenshots/results.png)
+## 📦 Install
 
-## Install
+> **The only requirement is [Python 3.8+](https://www.python.org/downloads/)** — there are *no*
+> third-party packages. On Windows, tick *“Add Python to PATH”* in the installer.
 
-**The only requirement is Python 3.8 or newer.** There are *no* third-party packages.
-Get Python from [python.org/downloads](https://www.python.org/downloads/) (on Windows, tick
-*“Add Python to PATH”*).
+Two ways to set it up:
 
-You have two ways to set it up:
-
-* **Click and go** — double-click **`APKInspect.cmd`** (Windows). It downloads Python for you
-  if it's missing and runs straight from the folder. Nothing else to install.
-* **Install it yourself** — double-click **`Install APKInspect.cmd`** (Windows), or run
-  `pip install .` on any OS. This adds the `apkinspect` and `apkinspect-gui` commands so you
-  can run them from any terminal.
+| | How | What it does |
+|---|---|---|
+| **Click &amp; go** | double-click **`APKInspect.cmd`** | Downloads Python for you if it's missing and runs straight from the folder. Nothing else to install. |
+| **Install it yourself** | double-click **`Install APKInspect.cmd`** *(or `pip install .` on any OS)* | Adds the `apkinspect` and `apkinspect-gui` commands so you can run them from any terminal. |
 
 Or run it from the folder without installing anything:
 
@@ -71,7 +86,10 @@ python3 -m apkinspect path/to/app.apk     # macOS / Linux
 python  -m apkinspect.web                 # graphical app
 ```
 
-### CLI options
+<details>
+<summary><b>CLI options &amp; CI gates</b></summary>
+
+<br>
 
 | Option | Purpose |
 |---|---|
@@ -83,46 +101,53 @@ python  -m apkinspect.web                 # graphical app
 | `--baseline FILE` / `--write-baseline FILE` | Suppress accepted findings; gate only on **new** issues. |
 | `-o FILE` | Write the report to a file. |
 
-Exit codes: `0` ok · `1` a CI gate failed · `2` a file could not be scanned. Full list: `apkinspect --help`.
+Exit codes: `0` ok · `1` a CI gate failed · `2` a file could not be scanned.
 
 ```bash
 # Fail a pipeline if any build scores under 70 or has a HIGH+ issue
 apkinspect build/*.apk --min-score 70 --fail-on HIGH
 ```
 
-## What it checks
+</details>
+
+## 🔍 What it checks
 
 Every check has a stable `id` and is exercised by an automated test.
 
-* **Hard-coded secrets & exposed backends** (`secrets.py`) — AWS/GCP/Stripe/GitHub/Slack/
-  Twilio/OpenAI keys, **Firebase Realtime DB URLs**, DB connection strings, and more, swept
-  across DEX, `resources.arsc`, `assets/`, native libs, and manifest meta-data. Secret values
-  are **redacted** in the report.
-* **Exported components & deep links** (`manifest.py`) — activities/services/receivers/
-  **providers** reachable by any app, and BROWSABLE intent-filters accepting cleartext
-  `http://` web links (deep-link hijacking / MITM).
-* **Config & network posture** (`manifest.py`, `nsc.py`) — `debuggable`, `usesCleartextTraffic`,
-  `allowBackup`, plus the compiled **network-security-config** (cleartext / user-CA trust).
-* **App signing** (`signing.py`) — Android **debug certificate**, weak **MD5/SHA-1** algorithms,
-  RSA keys **< 2048 bits**, and **v1-only** signing (Janus / CVE-2017-13156).
-* **Dangerous permissions** (`permissions.py`) — runtime-dangerous and powerful permissions,
-  each with a severity and rationale.
+- 🔑 **Hard-coded secrets &amp; exposed backends** &nbsp;`secrets.py`
+  AWS / GCP / Stripe / GitHub / Slack / Twilio / OpenAI keys, **Firebase Realtime DB URLs**,
+  DB connection strings, and more — swept across DEX, `resources.arsc`, `assets/`, native libs,
+  and manifest meta-data. Secret values are **redacted** in the report.
+- 📤 **Exported components &amp; deep links** &nbsp;`manifest.py`
+  Activities / services / receivers / **providers** reachable by any app, and BROWSABLE
+  intent-filters accepting cleartext `http://` links (deep-link hijacking / MITM).
+- 🌐 **Config &amp; network posture** &nbsp;`manifest.py` · `nsc.py`
+  `debuggable`, `usesCleartextTraffic`, `allowBackup`, plus the compiled
+  **network-security-config** (cleartext / user-CA trust).
+- ✍️ **App signing** &nbsp;`signing.py`
+  Android **debug certificate**, weak **MD5/SHA-1** algorithms, RSA keys **< 2048 bits**, and
+  **v1-only** signing (Janus / CVE-2017-13156).
+- ⚠️ **Dangerous permissions** &nbsp;`permissions.py`
+  Runtime-dangerous and powerful permissions, each with a severity and rationale.
 
-## Scoring
+## 📊 Scoring
 
-A perfect app starts at **100**; each finding multiplies the score by `(1 - impact)`, where
-impact scales with severity and repeated findings in a category decay so a long tail of minor
+A perfect app starts at **100**; each finding multiplies the score by `(1 − impact)`, where
+impact scales with severity, and repeated findings in a category decay so a long tail of minor
 issues can't underflow the score.
 
-| score | grade | risk |
-|---|---|---|
-| 90–100 | A | minimal |
-| 75–89 | B | low |
-| 60–74 | C | moderate |
-| 40–59 | D | high |
-| 0–39 | F | critical |
+| Score | Grade | Risk |
+|:---:|:---:|---|
+| 90–100 | 🟢 **A** | minimal |
+| 75–89 | 🟢 **B** | low |
+| 60–74 | 🟡 **C** | moderate |
+| 40–59 | 🟠 **D** | high |
+| 0–39 | 🔴 **F** | critical |
 
-## Develop & test
+<details>
+<summary><b>Develop &amp; test</b></summary>
+
+<br>
 
 97 unit/integration tests build **synthetic APK/AAB archives with planted issues** and assert
 that every check fires. CI runs them on Python 3.8–3.12.
@@ -133,14 +158,22 @@ python tools/make_samples.py              # generate samples/{vulnerable,clean}.
 python -m apkinspect samples/vulnerable.apk
 ```
 
-## Limitations
+</details>
 
-* **Static analysis** flags the *presence/exposure* of issues, not proven exploitability —
-  a flagged Firebase URL or exported component may be intentional and safe; verify it.
-* **AAB manifests are best-effort** (protobuf-decoded generically).
-* **Signing analysis reads, it does not verify** — it inspects the v1 certificate's fields and
+## ⚠️ Limitations
+
+- **Static analysis** flags the *presence/exposure* of issues, not proven exploitability — a
+  flagged Firebase URL or exported component may be intentional and safe; verify it.
+- **AAB manifests are best-effort** (protobuf-decoded generically).
+- **Signing analysis reads, it does not verify** — it inspects the v1 certificate's fields and
   detects a v2/v3 block, but does not cryptographically verify signatures.
 
-## License
+---
 
-MIT — see [LICENSE](LICENSE).
+<div align="center">
+
+**MIT licensed** — see [LICENSE](LICENSE).
+
+<sub>Runs on Windows · macOS · Linux &nbsp;•&nbsp; Zero dependencies &nbsp;•&nbsp; Nothing leaves your machine</sub>
+
+</div>

@@ -27,9 +27,6 @@ apkinspect-baseline.json
 desktop.ini
 APKInspect.app/
 
-# --- Local editor/agent config ---
-.claude/
-
 # --- Editors / OS cruft ---
 .vscode/
 .idea/
