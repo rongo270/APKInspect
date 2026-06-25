@@ -1,5 +1,10 @@
 # APKInspect
 
+[![CI](https://github.com/rongo270/APKInspect/actions/workflows/ci.yml/badge.svg)](https://github.com/rongo270/APKInspect/actions/workflows/ci.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Runtime dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](pyproject.toml)
+
 A **self-contained static security scanner for Android APK / AAB files**. Point it
 at an `.apk` or `.aab` and it inspects the manifest and every packaged file, then
 rates the app from **100 (safe)** to **0 (fully exposed / unsafe)**.
@@ -38,9 +43,11 @@ python -m apkinspect.web      # starts a local server and opens your browser
 apkinspect-gui
 ```
 
-On Windows you can just **double-click `APKInspect.cmd`**. Everything runs on
-`127.0.0.1` — no file ever leaves your machine. (No sample handy? Click **“try a sample
-scan”** on the drop zone.)
+**On Windows, no command line needed:** double-click **`Install APKInspect.cmd`** once.
+It checks that Python is present (and installs it for you if it isn't — nothing else is
+required), then drops an **APKInspect icon on your Desktop**. Double-click that icon any
+time to launch. Everything runs on `127.0.0.1` — no file ever leaves your machine. (No
+sample handy? Click **“try a sample scan”** on the drop zone.)
 
 | Scanner | Threat Book |
 |---|---|
@@ -48,18 +55,25 @@ scan”** on the drop zone.)
 
 ![Results view](assets/screenshots/results.png)
 
-The app icon lives in `assets/` (`icon.png` / `icon.ico`), and the project folder is
-configured via `desktop.ini` to show it in Windows Explorer.
+The app icon lives in `assets/` (`icon.png` / `icon.ico`) and is regenerated from pure
+Python by `tools/make_icon.py`. The Windows setup script applies it to the shortcut it
+creates, so the launcher carries the real icon.
 
 ## Install / run
 
-No install required:
+**Requirements:** just **Python 3.8 or newer** — there are *no* third-party packages to
+install (the tool is pure standard library). Get Python from
+[python.org/downloads](https://www.python.org/downloads/) (on Windows, tick *“Add Python
+to PATH”*), or let `Install APKInspect.cmd` handle it for you.
+
+No install required — run it straight from the folder (use `python3` on macOS/Linux):
 
 ```bash
-python -m apkinspect path/to/app.apk
+python -m apkinspect path/to/app.apk          # Windows
+python3 -m apkinspect path/to/app.apk         # macOS / Linux
 ```
 
-Or install the console script:
+Or install the console script so `apkinspect` is on your PATH everywhere:
 
 ```bash
 pip install .
@@ -238,7 +252,8 @@ apkinspect/
 assets/          App icon (png/ico) + screenshots
 tests/           Test suite + synthetic-fixture builders
 tools/           Sample generator + pure-Python icon generator
-APKInspect.cmd   Windows double-click launcher for the GUI
+APKInspect.cmd        Windows launcher for the GUI (finds Python, starts the app)
+Install APKInspect.cmd One-time Windows setup: ensures Python + makes a desktop icon
 ```
 
 ## Limitations & honest caveats
