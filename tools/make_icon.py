@@ -184,6 +184,17 @@ def ico_bytes(images: list[tuple[int, bytes]]) -> bytes:
     return out + body
 
 
+def icns_bytes(entries: list[tuple[bytes, bytes]]) -> bytes:
+    """Wrap PNGs in a macOS ICNS container.
+
+    ``entries`` is a list of ``(4-byte OSType, png_bytes)``. Each block is
+    ``OSType + uint32(len + 8) + png``; the file is ``b"icns" + uint32(total) + blocks``.
+    """
+    body = b"".join(ostype + struct.pack(">I", len(png) + 8) + png
+                    for ostype, png in entries)
+    return b"icns" + struct.pack(">I", len(body) + 8) + body
+
+
 def main() -> None:
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     assets = os.path.join(root, "assets")
@@ -201,7 +212,24 @@ def main() -> None:
     with open(os.path.join(assets, "icon.ico"), "wb") as fh:
         fh.write(ico_bytes(images))
 
-    print(f"wrote {assets}\\icon.png ({len(png256)} bytes) and icon.ico")
+    # macOS .icns — PNG-backed OSTypes covering Finder/Dock at every size + retina
+    png = {s: png_bytes(s, s, downscale(master, s)) for s in (16, 32, 64, 128, 256, 512, 1024)}
+    icns = icns_bytes([
+        (b"icp4", png[16]),    # 16x16
+        (b"icp5", png[32]),    # 32x32
+        (b"ic11", png[32]),    # 16x16@2x
+        (b"ic12", png[64]),    # 32x32@2x
+        (b"ic07", png[128]),   # 128x128
+        (b"ic13", png[256]),   # 128x128@2x
+        (b"ic08", png[256]),   # 256x256
+        (b"ic14", png[512]),   # 256x256@2x
+        (b"ic09", png[512]),   # 512x512
+        (b"ic10", png[1024]),  # 512x512@2x
+    ])
+    with open(os.path.join(assets, "icon.icns"), "wb") as fh:
+        fh.write(icns)
+
+    print(f"wrote {assets}\\icon.png ({len(png256)} bytes), icon.ico, icon.icns ({len(icns)} bytes)")
 
 
 if __name__ == "__main__":

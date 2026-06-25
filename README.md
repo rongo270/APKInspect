@@ -49,8 +49,9 @@ apkinspect-gui
 * **Windows** — double-click **`APKInspect.cmd`**. The first time, it makes sure Python is
   installed (installing it for you if it isn't — nothing else is needed), creates an
   **APKInspect icon on your Desktop**, and launches. After that, just use the Desktop icon.
-* **macOS** — double-click **`APKInspect.command`** (the very first time, right-click it →
-  **Open** to get past Gatekeeper).
+* **macOS** — double-click **`APKInspect.command`** (first time only: right-click it →
+  **Open** to clear Gatekeeper). It builds an **`APKInspect.app`** with the real icon —
+  keep it in the folder or drag it to your Dock and launch from there next time.
 * **Linux** — run **`./APKInspect.command`** from a terminal.
 
 Everything runs on `127.0.0.1` — no file ever leaves your machine. (No sample handy? Click
@@ -62,9 +63,9 @@ Everything runs on `127.0.0.1` — no file ever leaves your machine. (No sample 
 
 ![Results view](assets/screenshots/results.png)
 
-The app icon lives in `assets/` (`icon.png` / `icon.ico`) and is regenerated from pure
-Python by `tools/make_icon.py`. On first launch the Windows launcher creates a Desktop
-shortcut that carries this icon.
+The app icon lives in `assets/` (`icon.png`, `icon.ico`, `icon.icns`) and is regenerated
+from pure Python by `tools/make_icon.py`. On first launch the Windows launcher creates a
+Desktop shortcut, and the macOS launcher builds an `APKInspect.app` — both carry this icon.
 
 ## Install / run
 
@@ -256,7 +257,7 @@ apkinspect/
   web/           Local web GUI (stdlib http.server + static SPA)
     server.py    API (/api/scan, /api/catalog, /api/demo) + static serving
     static/      index.html, styles.css, app.js, icon.svg
-assets/          App icon (png/ico) + screenshots
+assets/          App icon (png/ico/icns) + screenshots
 tests/           Test suite + synthetic-fixture builders
 tools/           Sample generator + pure-Python icon generator
 APKInspect.cmd     Windows launcher (finds/installs Python, makes a desktop icon, runs the GUI)

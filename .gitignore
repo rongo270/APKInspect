@@ -22,9 +22,13 @@ htmlcov/
 *.sarif
 apkinspect-baseline.json
 
-# --- Windows setup artifacts (generated per machine, paths are local) ---
+# --- Launcher artifacts generated per machine (local paths / not portable) ---
 *.lnk
 desktop.ini
+APKInspect.app/
+
+# --- Local editor/agent config ---
+.claude/
 
 # --- Editors / OS cruft ---
 .vscode/
