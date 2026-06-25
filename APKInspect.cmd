@@ -36,14 +36,14 @@ if not defined PY (
   exit /b 1
 )
 
-rem --- first run only: create a Desktop + in-folder icon you can double-click ---
+rem --- first run only: create an in-folder icon you can double-click (never on the Desktop) ---
 if not exist "%~dp0APKInspect.lnk" (
-  echo First-time setup: creating an APKInspect icon...
+  echo First-time setup: creating an APKInspect icon in this folder...
   set "APKI_TARGET=%~dp0APKInspect.cmd"
   set "APKI_ICON=%~dp0assets\icon.ico"
   set "APKI_WORKDIR=%~dp0"
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $work = $env:APKI_WORKDIR.TrimEnd('\'); foreach ($dir in @([Environment]::GetFolderPath('Desktop'), $work)) { $lnk = $ws.CreateShortcut((Join-Path $dir 'APKInspect.lnk')); $lnk.TargetPath = $env:APKI_TARGET; $lnk.WorkingDirectory = $work; $lnk.IconLocation = $env:APKI_ICON; $lnk.Description = 'APKInspect - Android APK/AAB security scanner'; $lnk.Save() }"
-  if exist "%~dp0APKInspect.lnk" echo Done - an APKInspect icon is now on your Desktop.
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $work = $env:APKI_WORKDIR.TrimEnd('\'); $lnk = $ws.CreateShortcut((Join-Path $work 'APKInspect.lnk')); $lnk.TargetPath = $env:APKI_TARGET; $lnk.WorkingDirectory = $work; $lnk.IconLocation = $env:APKI_ICON; $lnk.Description = 'APKInspect - Android APK/AAB security scanner'; $lnk.Save()"
+  if exist "%~dp0APKInspect.lnk" echo Done - an APKInspect icon is now in this folder.
   echo.
 )
 
