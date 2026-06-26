@@ -22,10 +22,9 @@ htmlcov/
 *.sarif
 apkinspect-baseline.json
 
-# --- Launcher artifacts generated per machine (local paths / not portable) ---
+# --- Per-machine launcher artifacts (local paths / not portable) ---
 *.lnk
 desktop.ini
-APKInspect.app/
 
 # --- Editors / OS cruft ---
 .vscode/

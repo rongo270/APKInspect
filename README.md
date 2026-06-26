@@ -50,12 +50,16 @@ APKInspect ships a polished **local web app**: drag in an APK/AAB to get an anim
 score, colour-coded findings, and a built-in **Threat Book** that explains every issue and
 exactly how to block it.
 
-- 🪟 **Windows** - double-click **`APKInspect.cmd`**. If Python is missing it installs it for
-  you, then opens the app in your browser. *(The icon is created **in this folder** - never on
-  your Desktop.)*
-- 🍎 **macOS** - double-click **`APKInspect.command`** *(first time: right-click → **Open**)*.
-  It builds an **`APKInspect.app`** with the real icon.
-- 🐧 **Linux** - run **`./APKInspect.command`** from a terminal.
+> **First install [Python 3.8+](https://www.python.org/downloads/)** (on Windows, tick *“Add
+> python.exe to PATH”*). Then just run the app:
+
+- 🪟 **Windows** - double-click **`APKInspect.pyw`**. The app opens in your browser with **no
+  console window**.
+- 🍎 **macOS** - double-click **`APKInspect.app`** *(first time: right-click → **Open** →
+  **Open**)*.
+- 🐧 **Linux** - run **`python3 -m apkinspect.web`** from a terminal in this folder.
+
+New here? Step-by-step setup is in **[`INSTALL.txt`](INSTALL.txt)**.
 
 > No sample handy? Click **“try a sample scan”** on the drop zone.
 
@@ -66,43 +70,39 @@ exactly how to block it.
   </tr>
 </table>
 
-## 🛡️ Is this safe? (and that Windows warning)
+## 🛡️ Is this safe?
 
 Yes. APKInspect is **open-source** (you can read every line here), has **zero third-party
 dependencies**, and runs **entirely on your own machine** at `127.0.0.1` - nothing is ever
-uploaded. The first run only downloads **Python** (from the official python.org), and only if
-you don't already have it.
+uploaded. Once Python is installed, the launchers simply start the local app: **no console
+window, no background installer, nothing else to click**.
 
-The first time you open it, Windows may show a blue **“Windows protected your PC”** notice, or
-an **“Open File - Security Warning”**. That's Windows being cautious about *any* brand-new file
-it hasn't seen before - not a sign that anything is wrong. Free tools like this aren't
-code-signed (the certificates are expensive), so they look "unknown" until they build a
-reputation.
+If your system flags the files as coming "from the internet" the first time, that is normal for
+any new download - not a sign that anything is wrong:
 
-- **To run it anyway:** click **More info → Run anyway** (blue screen), or **Run** (security
-  warning).
-- **Prefer no warning at all?** Either:
-  - **Unblock the ZIP first:** right-click the downloaded **`.zip` → Properties →** tick
-    **Unblock → OK**, *then* extract. Windows now trusts the files and stays quiet.
-  - **Or use `git clone`** instead of the ZIP - cloned files are never tagged "from the
-    internet," so no warning appears.
-
-> 🍎 **macOS:** the first time, right-click **`APKInspect.command` → Open** (then **Open**
-> again). After that, a normal double-click works.
+- 🪟 **Windows** - right-click the downloaded **`.zip` → Properties →** tick **Unblock → OK**
+  *before* extracting, and nothing is flagged. Using **`git clone`** instead of the ZIP avoids
+  it too.
+- 🍎 **macOS** - the first time, right-click **`APKInspect.app` → Open → Open**. After that a
+  normal double-click works.
 
 ## 📦 Install
 
 > **The only requirement is [Python 3.8+](https://www.python.org/downloads/)** - there are *no*
-> third-party packages. On Windows, tick *“Add Python to PATH”* in the installer.
+> third-party packages. On Windows, tick *“Add python.exe to PATH”* in the installer.
 
-Two ways to set it up:
+That's the whole setup. After Python, just **run the app** - double-click **`APKInspect.pyw`**
+(Windows) or **`APKInspect.app`** (macOS), or run `python -m apkinspect.web` from any terminal.
 
-| | How | What it does |
-|---|---|---|
-| **Click &amp; go** | double-click **`APKInspect.cmd`** | Downloads Python for you if it's missing and runs straight from the folder. Nothing else to install. |
-| **Install it yourself** | double-click **`Install APKInspect.cmd`** *(or `pip install .` on any OS)* | Adds the `apkinspect` and `apkinspect-gui` commands so you can run them from any terminal. |
+**Optional** - add the `apkinspect` and `apkinspect-gui` commands so you can run them from any
+folder. In this folder run:
 
-Or run it from the folder without installing anything:
+```bash
+python  -m pip install .     # Windows
+python3 -m pip install .     # macOS / Linux
+```
+
+Or scan straight from the folder without installing anything:
 
 ```bash
 python  -m apkinspect path/to/app.apk     # Windows

@@ -1,0 +1,79 @@
+APKInspect - How to install and run
+===================================
+
+APKInspect is a free, open-source security scanner for Android APK / AAB files.
+It runs ENTIRELY on your own computer (on 127.0.0.1). Nothing is ever uploaded.
+
+It has ZERO third-party dependencies. The only thing you need is Python.
+
+
+-------------------------------------------------------------------
+STEP 1 - Install Python (one time)
+-------------------------------------------------------------------
+
+Download Python 3.8 or newer from:
+
+    https://www.python.org/downloads/
+
+  - Windows: run the installer and TICK the box "Add python.exe to PATH"
+             on the first screen, then click "Install Now".
+  - macOS:   run the downloaded .pkg installer  (or:  brew install python ).
+  - Linux:   use your package manager, e.g.  sudo apt install python3
+
+
+-------------------------------------------------------------------
+STEP 2 - Run the app
+-------------------------------------------------------------------
+
+Windows:
+    Double-click   APKInspect.pyw
+macOS:
+    Double-click   APKInspect.app
+    First time only: right-click it -> Open -> Open, so macOS trusts it.
+
+Linux (or any system) - open a terminal in this folder and run:
+    python3 -m apkinspect.web
+
+Your browser opens the app. Drag an APK or AAB file onto it to get a
+safety score from 100 (safe) down to 0 (exposed).
+
+To stop it: close the browser tab. On Windows you can also end the
+"pythonw" task in Task Manager; on macOS quit APKInspect from the Dock.
+
+
+-------------------------------------------------------------------
+Prefer the command line? (optional)
+-------------------------------------------------------------------
+
+Scan a file without the graphical app - open a terminal IN THIS FOLDER:
+
+    Windows:        python  -m apkinspect  path\to\app.apk
+    macOS / Linux:  python3 -m apkinspect  path/to/app.apk
+
+Want the short "apkinspect" / "apkinspect-gui" commands available from
+ANY folder? Install the tool into Python (optional) - in this folder run:
+
+    Windows:        python  -m pip install .
+    macOS / Linux:  python3 -m pip install .
+
+Then, from anywhere:
+    apkinspect path/to/app.apk      (command-line scanner)
+    apkinspect-gui                  (graphical app)
+
+
+-------------------------------------------------------------------
+Is this safe?
+-------------------------------------------------------------------
+
+Yes. APKInspect is open-source - you can read every line in this folder.
+It has no third-party dependencies and never sends your files anywhere.
+
+The first time you run it, your system may warn that the file came "from
+the internet". That is normal for any new download, not a sign of a problem:
+
+  - Windows: right-click the downloaded .zip -> Properties -> tick Unblock
+             -> OK, BEFORE you extract it. Then nothing is flagged.
+  - macOS:   right-click APKInspect.app -> Open the first time.
+
+Getting the project with "git clone" instead of the .zip avoids the
+warning entirely.

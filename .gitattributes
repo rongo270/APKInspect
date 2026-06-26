@@ -13,5 +13,6 @@
 # Binary assets - never touch line endings.
 *.png binary
 *.ico binary
+*.icns binary
 *.apk binary
 *.aab binary
