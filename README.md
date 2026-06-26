@@ -132,17 +132,17 @@ Every check has a stable `id` and is exercised by an automated test.
 
 ## 📊 Scoring
 
-A perfect app starts at **100**; each finding multiplies the score by `(1 − impact)`, where
+A perfect app starts at **100**; each finding multiplies the score by `(1 - impact)`, where
 impact scales with severity, and repeated findings in a category decay so a long tail of minor
 issues can't underflow the score.
 
 | Score | Grade | Risk |
 |:---:|:---:|---|
-| 90–100 | 🟢 **A** | minimal |
-| 75–89 | 🟢 **B** | low |
-| 60–74 | 🟡 **C** | moderate |
-| 40–59 | 🟠 **D** | high |
-| 0–39 | 🔴 **F** | critical |
+| 90-100 | 🟢 **A** | minimal |
+| 75-89 | 🟢 **B** | low |
+| 60-74 | 🟡 **C** | moderate |
+| 40-59 | 🟠 **D** | high |
+| 0-39 | 🔴 **F** | critical |
 
 <details>
 <summary><b>Develop &amp; test</b></summary>
@@ -150,7 +150,7 @@ issues can't underflow the score.
 <br>
 
 97 unit/integration tests build **synthetic APK/AAB archives with planted issues** and assert
-that every check fires. CI runs them on Python 3.8–3.12.
+that every check fires. CI runs them on Python 3.8-3.12.
 
 ```bash
 python -m unittest discover -s tests -v   # run the suite

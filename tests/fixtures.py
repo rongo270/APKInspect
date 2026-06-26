@@ -472,7 +472,7 @@ def build_certificate(cn: str = "Android Debug", sig_oid: str = SHA1_RSA_OID,
                       key_bits: int = 2048, org: str = "Android") -> bytes:
     """Build a syntactically valid (self-signed-looking) X.509 cert DER.
 
-    The signature itself is bogus — we only ever read fields, never verify it."""
+    The signature itself is bogus - we only ever read fields, never verify it."""
     algid = _d_seq(_d_oid(sig_oid), _d_null())
     name = _d_seq(_rdn(_CN_OID, cn), _rdn(_O_OID, org))
     validity = _d_seq(_d_utctime(), _d_utctime("330101000000Z"))

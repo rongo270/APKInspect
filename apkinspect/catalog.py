@@ -89,7 +89,7 @@ THREATS: list[dict] = [
     {
         "key": "google-api", "ids": ["SECRET_GOOGLE_API_KEY"],
         "title": "Google API key", "severity": "HIGH", "category": "secret",
-        "what": "A Google API key (AIza…) is present — commonly for Maps, Places or Firebase.",
+        "what": "A Google API key (AIza…) is present - commonly for Maps, Places or Firebase.",
         "risk": "An unrestricted key can be lifted and used to rack up billable API calls on your "
                 "project, or abuse enabled services.",
         "detect": "We match the 'AIza' + 35-char key format across files and manifest meta-data.",
@@ -110,7 +110,7 @@ THREATS: list[dict] = [
         "title": "Firebase Realtime Database exposure", "severity": "HIGH", "category": "network",
         "what": "A Firebase Realtime Database URL (…firebaseio.com / …firebasedatabase.app) is present.",
         "risk": "If the database security rules are open (a very common mistake), anyone who reads "
-                "this URL can dump or overwrite your entire dataset — no app required.",
+                "this URL can dump or overwrite your entire dataset - no app required.",
         "detect": "We extract the database URL and surface it in full so you can test it.",
         "block": "Open '<db-url>/.json' in a browser: if you see data, your rules are public. Lock "
                  "rules to 'auth != null' (or stricter) and never rely on the URL being secret.",
@@ -151,7 +151,7 @@ THREATS: list[dict] = [
         "key": "google-oauth", "ids": ["SECRET_GOOGLE_OAUTH"],
         "title": "Google OAuth client id", "severity": "LOW", "category": "secret",
         "what": "A Google OAuth client id (…apps.googleusercontent.com) is present.",
-        "risk": "Client ids are public by design and low-risk — but a matching client *secret* must "
+        "risk": "Client ids are public by design and low-risk - but a matching client *secret* must "
                 "never be shipped alongside it.",
         "detect": "We surface the client id so you can confirm no secret accompanies it.",
         "block": "Use an Android OAuth client (no secret) configured with your signing certificate.",
@@ -173,7 +173,7 @@ THREATS: list[dict] = [
         "detect": "We match 'api_key=/secret=/password=' patterns and keep only values that look "
                   "random (placeholders and low-entropy strings are filtered out).",
         "block": "Move secrets out of the binary: fetch them at runtime over an authenticated channel, "
-                 "or use a server-side proxy. Do not just obfuscate — that only slows attackers down.",
+                 "or use a server-side proxy. Do not just obfuscate - that only slows attackers down.",
     },
     {
         "key": "llm-keys", "ids": ["SECRET_OPENAI_KEY", "SECRET_ANTHROPIC_KEY"],
@@ -217,7 +217,7 @@ THREATS: list[dict] = [
                 "is present in the app.",
         "risk": "Anyone extracting it can connect directly to your database and read or destroy data.",
         "detect": "We match 'scheme://user:pass@host' connection strings.",
-        "block": "Never let a client talk to the database directly — put a backend API in front and "
+        "block": "Never let a client talk to the database directly - put a backend API in front and "
                  "rotate the exposed credentials.",
     },
     # -------------------------------------------------------------- components
@@ -227,7 +227,7 @@ THREATS: list[dict] = [
         "what": "An activity, service, receiver or content provider is reachable by other apps with no "
                 "permission check (set explicitly via android:exported, or implicitly by declaring an "
                 "intent-filter).",
-        "risk": "Any installed app can invoke it — launching internal screens, sending crafted intents, "
+        "risk": "Any installed app can invoke it - launching internal screens, sending crafted intents, "
                 "or (for providers) reading/writing your data directly.",
         "detect": "We evaluate each component's exported state and whether a guarding permission exists; "
                   "the launcher entry point is excluded as it is meant to be public.",
@@ -272,7 +272,7 @@ THREATS: list[dict] = [
         "title": "Debuggable application", "severity": "HIGH", "category": "config",
         "what": "android:debuggable=\"true\" is set on the application.",
         "risk": "Anyone can attach a debugger (jdwp) to the running app on any device, read memory, and "
-                "execute code in its context — a serious leak if it reaches production.",
+                "execute code in its context - a serious leak if it reaches production.",
         "detect": "We read the debuggable flag from the application element.",
         "block": "Remove the flag for release builds (the release build type already defaults to false).",
     },
@@ -289,7 +289,7 @@ THREATS: list[dict] = [
     {
         "key": "cleartext", "ids": ["MANIFEST_CLEARTEXT", "MANIFEST_CLEARTEXT_DEFAULT"],
         "title": "Cleartext (HTTP) traffic", "severity": "MEDIUM", "category": "network",
-        "what": "The app permits unencrypted HTTP — explicitly (usesCleartextTraffic=\"true\") or by "
+        "what": "The app permits unencrypted HTTP - explicitly (usesCleartextTraffic=\"true\") or by "
                 "default (targetSdk < 28 with no network security config).",
         "risk": "Traffic can be read and modified by anyone on the network path (public Wi-Fi, rogue "
                 "router), enabling credential theft and content injection.",
@@ -320,7 +320,7 @@ THREATS: list[dict] = [
         "title": "Sensitive permission requested", "severity": "MEDIUM", "category": "permission",
         "what": "The app requests a privacy-sensitive or powerful permission (e.g. SYSTEM_ALERT_WINDOW, "
                 "REQUEST_INSTALL_PACKAGES, READ_SMS, location, camera, microphone).",
-        "risk": "Each such permission expands what the app — or an attacker who compromises it — can do, "
+        "risk": "Each such permission expands what the app - or an attacker who compromises it - can do, "
                 "from reading 2FA SMS to drawing tap-jacking overlays or installing other APKs.",
         "detect": "We compare requested permissions against a curated catalogue, each with its own "
                   "severity and rationale.",
@@ -356,7 +356,7 @@ THREATS: list[dict] = [
         "title": "Signed with the Android debug key", "severity": "HIGH", "category": "signing",
         "what": "The APK is signed with the public Android debug certificate (CN=Android Debug).",
         "risk": "The debug key is well known and shared, so anyone can re-sign a tampered build with the "
-                "same identity — defeating update integrity and any signature-level permission.",
+                "same identity - defeating update integrity and any signature-level permission.",
         "detect": "We read the signer certificate's subject from the v1 signature (or scan for the debug "
                   "subject in the signing block).",
         "block": "Sign release builds with a private release keystore; never ship a debug-signed APK.",
@@ -384,7 +384,7 @@ THREATS: list[dict] = [
         "risk": "v1-only signing is malleable (e.g. the Janus vulnerability, CVE-2017-13156) and gives "
                 "weaker tamper protection than whole-file v2+ signing.",
         "detect": "We check for the 'APK Sig Block 42' signing block alongside the META-INF v1 signature.",
-        "block": "Enable APK Signature Scheme v2+ — it is the default in current Android build tooling.",
+        "block": "Enable APK Signature Scheme v2+ - it is the default in current Android build tooling.",
     },
 ]
 

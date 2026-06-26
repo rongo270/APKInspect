@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APKInspect — Android security scanner</title>
+<title>APKInspect - Android security scanner</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -38,9 +38,32 @@
       <input id="fileInput" type="file" accept=".apk,.aab,.zip,.xapk" hidden>
     </div>
 
+    <div id="staged" class="staged" hidden>
+      <div class="staged__file">
+        <svg class="staged__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div class="staged__meta">
+          <div class="staged__name" id="stagedName"></div>
+          <div class="staged__size" id="stagedSize"></div>
+        </div>
+      </div>
+      <div class="staged__actions">
+        <button type="button" class="btn btn--ghost" id="stagedCancel">Choose different</button>
+        <button type="button" class="btn btn--primary" id="scanBtn">Scan now →</button>
+      </div>
+    </div>
+
     <div id="scanning" class="scanning" hidden>
-      <div class="spinner"></div>
-      <div>Scanning <strong id="scanningName"></strong>…</div>
+      <div class="progress" id="progress">
+        <div class="progress__top">
+          <span class="progress__label" id="progressPhase">Uploading</span>
+          <span class="progress__pct" id="progressPct"></span>
+        </div>
+        <div class="progress__track"><div class="progress__bar" id="progressBar"></div></div>
+        <div class="progress__name" id="scanningName"></div>
+      </div>
     </div>
 
     <div id="scanError" class="banner banner--error" hidden></div>
@@ -67,7 +90,7 @@
             </div>
           </div>
           <div class="gauge-card__foot">
-            <span class="grade-badge" id="gradeBadge">–</span>
+            <span class="grade-badge" id="gradeBadge">-</span>
             <span class="risk-label" id="riskLabel"></span>
           </div>
         </div>
@@ -98,13 +121,13 @@
         <article id="page-overview" class="book-page is-active">
           <h1>The book of APKInspect</h1>
           <p class="lead">APKInspect opens an Android app package (<code>.apk</code> or <code>.aab</code>),
-          reads its manifest and every bundled file, and reports the security problems it finds —
+          reads its manifest and every bundled file, and reports the security problems it finds -
           then scores the app from <strong>100 (safe)</strong> down to <strong>0 (fully exposed)</strong>.</p>
 
           <h2>What it inspects</h2>
           <div class="feature-grid">
             <div class="feature"><span class="feature__ic">🔑</span><div><b>Secrets &amp; API keys</b><p>Private keys, cloud credentials, Google/Stripe/Slack keys and high-entropy passwords hard-coded in the build.</p></div></div>
-            <div class="feature"><span class="feature__ic">🚪</span><div><b>Exported components</b><p>Activities, services, receivers and providers that any other app can reach — including cleartext <code>http://</code> deep links.</p></div></div>
+            <div class="feature"><span class="feature__ic">🚪</span><div><b>Exported components</b><p>Activities, services, receivers and providers that any other app can reach - including cleartext <code>http://</code> deep links.</p></div></div>
             <div class="feature"><span class="feature__ic">🌐</span><div><b>Exposed backends</b><p>Firebase databases and storage buckets whose URLs ship in the app and may have open rules.</p></div></div>
             <div class="feature"><span class="feature__ic">⚙️</span><div><b>Build configuration</b><p>Debuggable builds, allowed backups, cleartext traffic and other risky manifest flags.</p></div></div>
             <div class="feature"><span class="feature__ic">🛡️</span><div><b>Permissions</b><p>Privacy-sensitive and powerful permissions, each rated by how much they widen the attack surface.</p></div></div>
@@ -122,7 +145,7 @@
             <li>Read the score and the findings, grouped by severity.</li>
             <li>Expand any finding and click <b>“How to block this →”</b> to jump here for the full explanation and fix.</li>
           </ol>
-          <p class="muted">Note: this is static analysis — it flags the <i>presence</i> of risks, not proven exploitability.
+          <p class="muted">Note: this is static analysis - it flags the <i>presence</i> of risks, not proven exploitability.
           Always confirm a finding before acting on it.</p>
         </article>
 

@@ -196,7 +196,7 @@ def render_sarif(results: Iterable[ScanResult]) -> str:
             "tool": {"driver": {
                 "name": "APKInspect",
                 "version": __version__,
-                "informationUri": "https://github.com/rongo/APKInspect",
+                "informationUri": "https://github.com/rongo270/APKInspect",
                 "rules": list(rules.values()),
             }},
             "results": sarif_results,

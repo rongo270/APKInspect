@@ -92,8 +92,37 @@ main { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: clamp(1
 .dropzone__hint { color: var(--muted); margin-top: 8px; font-size: 14px; }
 .link { background: none; border: 0; color: var(--brand); font: inherit; cursor: pointer; text-decoration: underline; padding: 0; }
 
-/* ---------------- scanning ---------------- */
-.scanning { display: flex; align-items: center; gap: 14px; justify-content: center; padding: 60px; color: var(--muted); }
+/* ---------------- staged (waiting for Scan click) ---------------- */
+.staged {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  padding: 22px 24px; box-shadow: var(--shadow); animation: fade .2s ease;
+}
+.staged__file { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.staged__ic { width: 42px; height: 42px; color: var(--brand); flex: none; }
+.staged__name { font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 52vw; }
+.staged__size { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.staged__actions { display: flex; gap: 10px; flex: none; }
+
+/* ---------------- scanning + progress ---------------- */
+.scanning { display: flex; align-items: center; justify-content: center; padding: 56px 24px; color: var(--muted); }
+.progress { width: 100%; max-width: 520px; animation: fade .2s ease; }
+.progress__top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.progress__label { color: var(--text); font-weight: 650; }
+.progress__pct { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+.progress__track { position: relative; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress__bar {
+  height: 100%; width: 0; border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), var(--accent));
+  transition: width .2s ease;
+}
+.progress.is-indeterminate .progress__bar {
+  width: 35%; transition: none; animation: indet 1.2s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes indet { from { margin-left: -35%; } to { margin-left: 100%; } }
+.progress__name { margin-top: 12px; text-align: center; font-size: 13px; color: var(--muted-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .spinner { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--brand); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -108,6 +137,8 @@ main { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: clamp(1
 .btn { border: 0; border-radius: 10px; padding: 9px 15px; font: inherit; font-weight: 600; cursor: pointer; transition: .15s; }
 .btn--ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
 .btn--ghost:hover { border-color: var(--brand); }
+.btn--primary { background: linear-gradient(180deg, var(--brand), var(--accent)); color: #fff; box-shadow: 0 8px 20px -10px var(--accent); }
+.btn--primary:hover { filter: brightness(1.07); }
 
 .card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
 .card__title { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }

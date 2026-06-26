@@ -12,7 +12,7 @@ so a CI gate only fires on **new** issues.  It is a small JSON file:
     }
 
 A fingerprint is a stable hash of the finding's ``id``, ``location``, ``title``
-and (redacted) ``evidence`` — enough to tell two findings apart (e.g. different
+and (redacted) ``evidence`` - enough to tell two findings apart (e.g. different
 dangerous permissions) while surviving re-scans of the same build.
 """
 from __future__ import annotations

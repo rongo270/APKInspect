@@ -27,10 +27,10 @@ jobs:
       - name: Build sample artifacts
         run: python tools/make_samples.py
 
-      - name: Self-scan — clean build must score >= 90
+      - name: Self-scan - clean build must score >= 90
         run: python -m apkinspect samples/clean.apk --min-score 90 --no-color
 
-      - name: Self-scan — vulnerable sample (informational)
+      - name: Self-scan - vulnerable sample (informational)
         run: python -m apkinspect samples/vulnerable.apk --no-color || true
 
       - name: Generate SARIF

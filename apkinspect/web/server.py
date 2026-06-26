@@ -101,7 +101,7 @@ class Handler(BaseHTTPRequestHandler):
         ]
         path = next((c for c in candidates if c and os.path.isfile(c)), None)
         if not path:
-            self._json(404, {"error": "no bundled sample found — run tools/make_samples.py first"})
+            self._json(404, {"error": "no bundled sample found - run tools/make_samples.py first"})
             return
         payload = scan_file(path).to_dict()
         payload["path"] = "vulnerable-sample.apk"

@@ -48,21 +48,92 @@
 
   /* ---------------- dropzone + scanning ---------------- */
   const dz = $("#dropzone"), input = $("#fileInput");
+  const VALID = /\.(apk|aab|zip|xapk)$/;
+  let pendingFile = null;
+
   $("#browseBtn").addEventListener("click", (e) => { e.stopPropagation(); input.click(); });
   dz.addEventListener("click", () => input.click());
   dz.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") input.click(); });
-  input.addEventListener("change", () => input.files[0] && scan(input.files[0]));
+  input.addEventListener("change", () => input.files[0] && stage(input.files[0]));
   ["dragenter", "dragover"].forEach((ev) =>
     dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("is-drag"); }));
   ["dragleave", "drop"].forEach((ev) =>
     dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("is-drag"); }));
-  dz.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) scan(f); });
+  dz.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) stage(f); });
+  $("#scanBtn").addEventListener("click", () => pendingFile && scan(pendingFile));
+  $("#stagedCancel").addEventListener("click", reset);
   $("#rescanBtn").addEventListener("click", reset);
   $("#demoBtn").addEventListener("click", (e) => { e.stopPropagation(); scanDemo(); });
 
+  // Drop or pick a file -> hold it and wait for an explicit "Scan now" click.
+  function stage(file) {
+    if (!VALID.test((file.name || "").toLowerCase())) {
+      showError("Please choose an .apk or .aab file (got “" + file.name + "”).");
+      return;
+    }
+    pendingFile = file;
+    dz.hidden = true; $("#scanError").hidden = true; $("#results").hidden = true; $("#scanning").hidden = true;
+    $("#stagedName").textContent = file.name;
+    $("#stagedSize").textContent = humanSize(file.size) + " · ready to scan";
+    $("#staged").hidden = false;
+  }
+
+  function reset() {
+    pendingFile = null;
+    $("#staged").hidden = true; $("#results").hidden = true;
+    $("#scanError").hidden = true; $("#scanning").hidden = true;
+    dz.hidden = false; input.value = "";
+  }
+  function showError(msg) {
+    $("#scanning").hidden = true; $("#staged").hidden = true;
+    const b = $("#scanError"); b.hidden = false; b.textContent = msg; dz.hidden = false;
+  }
+
+  function showScanning(name) {
+    dz.hidden = true; $("#staged").hidden = true; $("#scanError").hidden = true; $("#results").hidden = true;
+    $("#scanningName").textContent = name;
+    $("#scanning").hidden = false;
+  }
+  function setProgress(pct, phase, indeterminate) {
+    $("#progress").classList.toggle("is-indeterminate", !!indeterminate);
+    $("#progressPhase").textContent = phase;
+    $("#progressPct").textContent = indeterminate ? "" : pct + "%";
+    // clear inline width when indeterminate so the CSS animation rule (35%) wins
+    $("#progressBar").style.width = indeterminate ? "" : pct + "%";
+  }
+
+  // XHR (not fetch) so upload.onprogress gives a real % while the file uploads;
+  // once uploaded, the server scan is synchronous, so we show an indeterminate
+  // "Analyzing" bar until the JSON response arrives.
+  function scan(file) {
+    if (!VALID.test((file.name || "").toLowerCase())) {
+      showError("Please choose an .apk or .aab file (got “" + file.name + "”).");
+      return;
+    }
+    showScanning(file.name);
+    setProgress(0, "Uploading", false);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/scan");
+    xhr.setRequestHeader("X-Filename", file.name);
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100), "Uploading", false);
+    });
+    xhr.upload.addEventListener("load", () => setProgress(100, "Analyzing", true));
+    xhr.addEventListener("load", () => {
+      let data;
+      try { data = JSON.parse(xhr.responseText); }
+      catch (_) { return showError("Scan failed: bad response (HTTP " + xhr.status + ")."); }
+      if (xhr.status >= 400 || data.error) return showError("Scan failed: " + (data.error || ("HTTP " + xhr.status)));
+      $("#scanning").hidden = true;
+      renderResults(data, file.name);
+    });
+    xhr.addEventListener("error", () => showError("Scan failed: could not reach the local server."));
+    xhr.send(file);
+  }
+
   async function scanDemo() {
-    dz.hidden = true; $("#scanError").hidden = true; $("#results").hidden = true;
-    $("#scanning").hidden = false; $("#scanningName").textContent = "a bundled sample app";
+    showScanning("a bundled sample app");
+    setProgress(100, "Analyzing", true);
     try {
       const res = await fetch("/api/demo");
       const data = await res.json();
@@ -71,38 +142,6 @@
       renderResults(data, data.path || "sample.apk");
     } catch (err) {
       showError("Demo unavailable: " + err.message);
-    }
-  }
-
-  function reset() {
-    $("#results").hidden = true;
-    $("#scanError").hidden = true;
-    dz.hidden = false;
-    input.value = "";
-  }
-  function showError(msg) {
-    $("#scanning").hidden = true;
-    const b = $("#scanError"); b.hidden = false; b.textContent = msg; dz.hidden = false;
-  }
-
-  async function scan(file) {
-    const name = (file.name || "").toLowerCase();
-    if (!/\.(apk|aab|zip|xapk)$/.test(name)) {
-      showError("Please choose an .apk or .aab file (got “" + file.name + "”).");
-      return;
-    }
-    dz.hidden = true; $("#scanError").hidden = true; $("#results").hidden = true;
-    $("#scanning").hidden = false; $("#scanningName").textContent = file.name;
-    try {
-      const res = await fetch("/api/scan", {
-        method: "POST", headers: { "X-Filename": file.name }, body: file,
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
-      $("#scanning").hidden = true;
-      renderResults(data, file.name);
-    } catch (err) {
-      showError("Scan failed: " + err.message);
     }
   }
 
@@ -126,8 +165,8 @@
     // meta
     const m = $("#metaList"); m.innerHTML = "";
     const rows = [
-      ["Package", data.package || "—"],
-      ["Version", data.version_name ? `${data.version_name} (${data.version_code || "?"})` : "—"],
+      ["Package", data.package || "-"],
+      ["Version", data.version_name ? `${data.version_name} (${data.version_code || "?"})` : "-"],
       ["Min / Target SDK", `${data.min_sdk ?? "?"} / ${data.target_sdk ?? "?"}`],
       ["Size", humanSize(data.file_size)],
       ["DEX files", (data.meta && data.meta.dex_count) ?? "?"],
@@ -210,7 +249,7 @@
     requestAnimationFrame(step);
   }
   function humanSize(n) {
-    if (!n && n !== 0) return "—";
+    if (!n && n !== 0) return "-";
     const u = ["B", "KiB", "MiB", "GiB"]; let i = 0, s = n;
     while (s >= 1024 && i < u.length - 1) { s /= 1024; i++; }
     return (i === 0 ? s : s.toFixed(2)) + " " + u[i];
@@ -218,8 +257,8 @@
 
   /* ---------------- threat book ---------------- */
   function buildLegend() {
-    const grades = [["A", "90–100", "minimal"], ["B", "75–89", "low"], ["C", "60–74", "moderate"],
-      ["D", "40–59", "high"], ["F", "0–39", "critical"]];
+    const grades = [["A", "90-100", "minimal"], ["B", "75-89", "low"], ["C", "60-74", "moderate"],
+      ["D", "40-59", "high"], ["F", "0-39", "critical"]];
     const box = $("#gradeLegend"); box.innerHTML = "";
     grades.forEach(([g, r, label]) => box.append(el("div", { class: "g" }, [
       el("i", { text: g, style: `background:${GRADE_COLOR[g]}` }),

@@ -257,7 +257,7 @@ def analyze(root: Element, is_aab: bool = False) -> tuple[dict[str, Any], list[F
                 findings.append(Finding(
                     "COMPONENT_EXPORTED_WEAKPERM", f"Exported {tag} guarded by weak permission",
                     "LOW", "component", location=f"{tag} {name}",
-                    detail=f"Protected by '{', '.join(weak)}' which is normal/dangerous level — any app can request it.",
+                    detail=f"Protected by '{', '.join(weak)}' which is normal/dangerous level - any app can request it.",
                     recommendation="Use a signature-level permission to restrict access to your own apps.",
                 ))
             else:

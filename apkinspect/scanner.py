@@ -142,7 +142,7 @@ def scan_file(path: str, scan_secrets: bool = True,
         except Exception as exc:
             result.errors.append(f"network-config analysis failed: {exc}")
 
-        # App signing (debug cert, weak algo/key, v1-only) — APK only.
+        # App signing (debug cert, weak algo/key, v1-only) - APK only.
         try:
             for f in signing.analyze(path, zf, result.file_type, result.file_size):
                 result.add(f)

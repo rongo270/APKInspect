@@ -212,7 +212,7 @@ def main() -> None:
     with open(os.path.join(assets, "icon.ico"), "wb") as fh:
         fh.write(ico_bytes(images))
 
-    # macOS .icns — PNG-backed OSTypes covering Finder/Dock at every size + retina
+    # macOS .icns - PNG-backed OSTypes covering Finder/Dock at every size + retina
     png = {s: png_bytes(s, s, downscale(master, s)) for s in (16, 32, 64, 128, 256, 512, 1024)}
     icns = icns_bytes([
         (b"icp4", png[16]),    # 16x16

@@ -8,11 +8,11 @@ block in ``META-INF``, so we can flag:
 * signing with the well-known Android **debug** certificate,
 * **weak** certificate signature algorithms (MD5/SHA-1),
 * **short** signing keys (< 2048-bit RSA),
-* **v1-only** signing (no v2/v3 block — malleable, e.g. Janus/CVE-2017-13156).
+* **v1-only** signing (no v2/v3 block - malleable, e.g. Janus/CVE-2017-13156).
 
 AABs are (re-)signed by Google Play at distribution time, so signing analysis is
 only meaningful for APKs.  A completely unsigned archive (a pre-signing build
-artifact) yields no findings — there is nothing deployed to assess.
+artifact) yields no findings - there is nothing deployed to assess.
 """
 from __future__ import annotations
 
@@ -271,7 +271,7 @@ def analyze(path: str, zf, file_type: str, file_size: int) -> List[Finding]:
     has_v2plus = schemes is not None
 
     if not has_v1 and not has_v2plus:
-        return []   # unsigned build artifact — nothing deployed to assess
+        return []   # unsigned build artifact - nothing deployed to assess
 
     findings: List[Finding] = []
 

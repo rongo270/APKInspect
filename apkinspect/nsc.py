@@ -2,11 +2,11 @@
 
 Android apps can relax TLS/cleartext policy in a ``res/xml`` network-security
 config referenced from the manifest.  The manifest check only sees *that* a
-config is referenced, not what it permits — so we locate the compiled NSC
+config is referenced, not what it permits - so we locate the compiled NSC
 (binary XML) inside the archive and flag the dangerous settings directly:
 
-* ``cleartextTrafficPermitted="true"`` — allows unencrypted HTTP, and
-* ``<trust-anchors><certificates src="user"/>`` — trusts user-installed CAs,
+* ``cleartextTrafficPermitted="true"`` - allows unencrypted HTTP, and
+* ``<trust-anchors><certificates src="user"/>`` - trusts user-installed CAs,
   which lets anyone intercept TLS with a user-added certificate.
 
 ``debug-overrides`` blocks are ignored: they only apply to debuggable builds and
@@ -79,7 +79,7 @@ def analyze(zf) -> List[Finding]:
             "NETWORK_NSC_USER_CA", "Network security config trusts user-installed CAs", "MEDIUM",
             "network", location=name,
             detail="trust-anchors include <certificates src=\"user\"/>, so the app trusts CA "
-                   "certificates the device user installs — enabling TLS interception (MITM) with a "
+                   "certificates the device user installs - enabling TLS interception (MITM) with a "
                    "user-added certificate.",
             recommendation="Trust only the system store (src=\"system\") in production; relax trust "
                            "inside a <debug-overrides> block for local debugging instead.",
