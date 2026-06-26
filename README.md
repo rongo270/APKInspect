@@ -66,6 +66,30 @@ exactly how to block it.
   </tr>
 </table>
 
+## 🛡️ Is this safe? (and that Windows warning)
+
+Yes. APKInspect is **open-source** (you can read every line here), has **zero third-party
+dependencies**, and runs **entirely on your own machine** at `127.0.0.1` - nothing is ever
+uploaded. The first run only downloads **Python** (from the official python.org), and only if
+you don't already have it.
+
+The first time you open it, Windows may show a blue **“Windows protected your PC”** notice, or
+an **“Open File - Security Warning”**. That's Windows being cautious about *any* brand-new file
+it hasn't seen before - not a sign that anything is wrong. Free tools like this aren't
+code-signed (the certificates are expensive), so they look "unknown" until they build a
+reputation.
+
+- **To run it anyway:** click **More info → Run anyway** (blue screen), or **Run** (security
+  warning).
+- **Prefer no warning at all?** Either:
+  - **Unblock the ZIP first:** right-click the downloaded **`.zip` → Properties →** tick
+    **Unblock → OK**, *then* extract. Windows now trusts the files and stays quiet.
+  - **Or use `git clone`** instead of the ZIP - cloned files are never tagged "from the
+    internet," so no warning appears.
+
+> 🍎 **macOS:** the first time, right-click **`APKInspect.command` → Open** (then **Open**
+> again). After that, a normal double-click works.
+
 ## 📦 Install
 
 > **The only requirement is [Python 3.8+](https://www.python.org/downloads/)** - there are *no*
