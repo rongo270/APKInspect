@@ -30,6 +30,9 @@ Windows:
 macOS:
     Double-click   APKInspect.app
     First time only: right-click it -> Open -> Open, so macOS trusts it.
+    If you have security problem, go to         
+     System Settings -> Privacy & Security -> Security -> APKInspect: Open Anyway
+    For run go to folder terminal and enter python3 -m apkinspect.web
 
 Linux (or any system) - open a terminal in this folder and run:
     python3 -m apkinspect.web
